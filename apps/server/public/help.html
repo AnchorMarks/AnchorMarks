@@ -425,6 +425,14 @@
             </div>
 
             <div class="tip-box">
+              <span class="callout-icon" aria-hidden="true">💡</span
+              ><strong>Collapsed Sidebar Flyouts:</strong> When the sidebar is
+              collapsed, hovering over the Folders or Tags section icon reveals a
+              flyout panel listing all your folders or tags. Click any item in
+              the flyout to navigate directly without expanding the sidebar.
+            </div>
+
+            <div class="tip-box">
               <span class="callout-icon" aria-hidden="true">📊</span
               ><strong>Sidebar Count Badges:</strong> Each navigation item in
               the sidebar displays a count badge showing the number of bookmarks
@@ -924,12 +932,15 @@
             </p>
             <ol>
               <li>Edit the bookmark</li>
-              <li>Click <strong>"Fetch Metadata"</strong> button</li>
+              <li>Click <strong>"Fetch Info"</strong> button</li>
               <li>Save the bookmark</li>
             </ol>
             <p>
               The OG image will be fetched and displayed the next time you view
-              the bookmark in Rich Card View.
+              the bookmark in Rich Card View. Rich cards also attempt to
+              auto-fetch a missing OG image on first render and cache the result,
+              so many existing bookmarks populate automatically without manual
+              editing.
             </p>
             <div class="tip-box">
               <span class="callout-icon" aria-hidden="true">💡</span
@@ -2180,9 +2191,10 @@
                 entry: <code>apps/server/index.js</code>)
               </li>
               <li>
-                <strong>apps/client/src/</strong> — frontend TypeScript source
-                code (<code>apps/client/src/App.ts</code>, modules in
-                <code>apps/client/src/features/</code>)
+                <strong>apps/client/src/</strong> — frontend React + TypeScript
+                source code (entry: <code>apps/client/src/main.tsx</code>,
+                components in <code>apps/client/src/components/</code>, state in
+                <code>apps/client/src/contexts/</code>)
               </li>
               <li>
                 <strong>apps/client/public/</strong> — static assets and help
@@ -2221,8 +2233,9 @@
                 <code>apps/server/models/database.js</code>.
               </li>
               <li>
-                <strong>Frontend:</strong> TypeScript (Vanilla DOM) with
-                modules; API calls go through
+                <strong>Frontend:</strong> React 19 + TypeScript; state via
+                Context providers in <code>apps/client/src/contexts/</code>; API
+                calls go through
                 <code>apps/client/src/services/api.ts</code>.
               </li>
               <li>
@@ -2340,7 +2353,7 @@
               VITE_PORT=5173
             </div>
             <p>
-              The Vite configuration (<code>apps/vite.config.js</code>)
+              The Vite configuration (<code>apps/client/vite.config.js</code>)
               automatically reads these values and configures the proxy to route
               API requests to the correct backend port.
             </p>
@@ -2362,17 +2375,17 @@
                 protection, and better-sqlite3 for database access.
               </li>
               <li>
-                <strong>Frontend:</strong> Vanilla JS with modern ES modules, no
-                frameworks — great for understanding DOM manipulation and state
-                management.
+                <strong>Frontend:</strong> React 19 + TypeScript with
+                Context-based state management — great for learning modern React
+                patterns and component architecture.
               </li>
               <li>
                 <strong>Database:</strong> SQLite with WAL mode, user isolation,
                 and parameterized queries for security.
               </li>
               <li>
-                <strong>Testing:</strong> Jest for server, Vitest for client,
-                with coverage reporting.
+                <strong>Testing:</strong> Vitest for both server and client,
+                with coverage reporting and Playwright for E2E tests.
               </li>
               <li>
                 <strong>Build:</strong> Vite for fast development, npm

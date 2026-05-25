@@ -91,7 +91,7 @@ export function FolderDetailPanel({ folder }: Props) {
 
         <div className="form-group">
           <label htmlFor="fdp-color">Color</label>
-          <div className="fdp-color-row">
+          <div className="fdp-color-row" style={{ background: color }}>
             <input
               id="fdp-color"
               type="color"

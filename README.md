@@ -79,16 +79,16 @@ Compared to Linkwarden/Linkding/Shaarli, AnchorMarks emphasizes minimal setup, r
 make install-deps
 
 # Option A: Full stack (backend + Vite frontend) using Makefile
-make run-all
+make start-local
 # Backend on http://localhost:3000, Frontend on http://localhost:5173
 
 # Option B: Backend only (serve classic UI)
-make run-backend
+make start-backend
 # Visit http://localhost:3000
 
 # Option C: Frontend-only HMR during UI work
-make run-frontend
-# Visit http://localhost:5173 (API must be running: make run-backend)
+make start-frontend
+# Visit http://localhost:5173 (API must be running: make start-backend)
 
 # Option D: Run E2E tests (requires backend + frontend running)
 make test-e2e
@@ -104,7 +104,7 @@ make help
 ```bash
 # Build and start the stack
 make build-docker
-make run-docker
+make start-docker
 
 # Logs and shell
 make logs-docker
@@ -119,7 +119,7 @@ Compose file: tooling/docker/docker-compose.yml. The stack reads variables from 
 - Enable rate limiting on auth endpoints.
 - Run behind an SSL-terminating reverse proxy (see tooling/deploy/nginx.conf).
 - Block private/loopback SSRF targets; production code already enforces this.
-  📘 **[View full documentation →](help.html)** · [Installation Guide](docs/INSTALL.md) · [Vite Migration](VITE_MIGRATION.md)
+  📘 **[View full documentation →](help.html)** · [Installation Guide](docs/INSTALL.md)
 
 ## 🔧 Configuration
 
@@ -143,7 +143,7 @@ VITE_PORT=5173
 Then run:
 
 ```bash
-make run-prod
+make start-prod
 ```
 
 See [INSTALL.md](docs/INSTALL.md) for advanced deployment options.
@@ -203,24 +203,20 @@ See [SECURITY.md](SECURITY.md) for details.
 
 ## 🧱 Architecture Overview
 
-- Monorepo with workspaces: `apps/server` (Express + SQLite) and `apps/client` (Vite + TypeScript).
+- Monorepo with workspaces: `apps/server` (Express + SQLite) and `apps/client` (Vite + React + TypeScript).
 - Single API app handles auth, bookmarks, folders, tags, smart collections, and health tools.
-- Frontend is a vanilla JS/TS app with stateful views and API helper.
+- Frontend is a React app with context-based state management and a legacy bridge for incremental migration.
 - Background helpers: favicon/metadata fetchers with SSRF guards.
 
 ## 🛠️ Developer Workflows
 
-- Start backend only: `make run-backend`
-- Start frontend HMR: `make run-frontend` (requires backend running)
-- Full stack dev: `make run-all`
+- Start backend only: `make start-backend`
+- Start frontend HMR: `make start-frontend` (requires backend running)
+- Full stack dev: `make start-local`
 - Run unit tests: `make test-local`, coverage: `make test-coverage`
 - Run E2E tests: `make test-e2e` (requires backend running on port 3000)
 - Lint & format: `make lint-code` or `make lint-check`
-- Docker during local dev: `make run-docker` then `make logs-docker`
-
-> Note: Makefile target aliases (e.g., `dev`, `docker-up`, `e2e`, `lint`) were removed
-> to standardize on the Verb-Noun pattern. Please update scripts and CI to use the
-> new target names (for example: `run-backend`, `run-docker`, `test-e2e`).
+- Docker during local dev: `make start-docker` then `make logs-docker`
 
 ## 🙋 Support / Questions
 
@@ -243,7 +239,7 @@ MIT License - use, modify, and distribute freely.
 
 ```bash
 sudo chown -R 1001:1001 data/   # adjust path/user to your environment
-make run-docker
+make start-docker
 ```
 
 - For production servers, prefer fixing host permissions (chown to UID 1001) and removing the need for sudo in automation.

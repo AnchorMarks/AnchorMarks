@@ -19,9 +19,18 @@ All notable changes to AnchorMarks are documented here.
 - Fixed `user_settings` insert coercion so boolean-style settings values are stored safely as SQLite-compatible integers
 - Fixed `user_settings` insert path to persist `current_view` and `snap_to_grid` on first-time settings creation
 
+### Fixed
+
+- **AI service unavailability handled gracefully** — `suggestTagsAI` now catches service errors and returns an empty suggestion list instead of propagating the exception
+- **Widget "Show in Bookmarks" filter** — fixed `showWidgetInBookmarksView` to read the current filter configuration via the bookmarks bridge rather than an outdated local copy
+- **Dashboard/commands view switching** — folder and tag widgets now switch to `all` view (showing all bookmarks) before applying the widget filter, preventing empty results when the user is on an unrelated view
+
 ### Changed
 
 - Sidebar collapsed state is now tracked reactively via a `MutationObserver` on `document.body`, keeping the React tree in sync with external toggle actions
+- Removed unused `onEdit` props from `DashboardGrid` and `DashboardWidget` components
+- Improved type safety and error handling across server controllers and services
+- Docker Compose configuration refactored; added tests for `GeneralSettings` and the `useSettings` hook
 
 ---
 

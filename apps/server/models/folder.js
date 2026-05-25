@@ -33,7 +33,13 @@ function getFolderById(db, id, userId) {
     throw new Error("getFolderById requires userId for tenant isolation");
   }
   const row = db
-    .prepare("SELECT * FROM folders WHERE id = ? AND user_id = ?")
+    .prepare(
+      `SELECT f.*, COUNT(b.id) AS bookmark_count
+       FROM folders f
+       LEFT JOIN bookmarks b ON b.folder_id = f.id AND b.user_id = f.user_id AND b.is_archived = 0
+       WHERE f.id = ? AND f.user_id = ?
+       GROUP BY f.id`,
+    )
     .get(id, userId);
   return parseMeta(row) || null;
 }

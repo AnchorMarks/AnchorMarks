@@ -58,7 +58,7 @@ const NAV_ITEMS: NavItem[] = [
   },
   {
     view: "folder-organizer",
-    label: "Organize Folders",
+    label: "Folders",
     icon: "layout",
     tooltip: "Organize Folders",
   },
@@ -140,6 +140,8 @@ export function Sidebar() {
         return viewCounts.most_used ?? 0;
       case "archived":
         return viewCounts.archived ?? 0;
+      case "folder-organizer":
+        return folders.length;
       default:
         return 0;
     }

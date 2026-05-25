@@ -1,8 +1,8 @@
 # React Migration Plan
 
-## Current Status (Updated March 8, 2026)
+## Current Status (Updated May 25, 2026)
 
-**✅ Migration is ~80% complete!** Most of the app now runs on React.
+**✅ Migration is essentially complete.** The entire UI now runs on React.
 
 ### What's Working
 
@@ -23,10 +23,9 @@
 
 ### What's Left
 
-- ⚠️ Some legacy `*.ts` files still exist alongside `*.tsx` versions
-- ⚠️ The old `features/state.ts` module still exists (being phased out)
-- ⚠️ A few tests may reference old file paths
-- 🐛 2 minor unused variable warnings in TypeScript
+- ⚠️ `features/state.ts` still exists as a bridge; phaseout blocked until all legacy feature files are migrated
+- ⚠️ Legacy `.ts` component files (Badge.ts, Icon.ts, Tag.ts) remain for backwards compatibility with legacy feature files
+- 🐛 Minor TypeScript warnings in a few files (unused imports, unused variables)
 
 ### Migration Strategy Used
 
@@ -316,7 +315,7 @@ If you just want to get the app working and move on:
 4. **Start dev server**: `make start-local` - app should work!
 5. **Archive legacy files**: Move unused `.ts` files to `__legacy__/` folder for reference
 
-The migration is ~80% complete. The remaining work is primarily cleanup and removing legacy code.
+The migration is essentially complete. The remaining work is cleanup of legacy bridge files and minor TypeScript warnings.
 
 ---
 

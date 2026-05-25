@@ -12,15 +12,15 @@ Thanks for your interest in improving AnchorMarks! This project was built with A
 
 Use the `Makefile` for all development tasks:
 
-| Command            | Description                                          |
-| :----------------- | :--------------------------------------------------- |
-| `make start-local` | Start full dev stack (backend + Vite frontend HMR)   |
-| `make dev`         | Start backend only                                   |
-| `make dev-vite`    | Start Vite frontend only (requires separate backend) |
-| `make test`        | Run all tests                                        |
-| `make lint`        | Format and lint all code                             |
-| `make build`       | Build for production                                 |
-| `make clean`       | Clean build artifacts                                |
+| Command               | Description                                          |
+| :-------------------- | :--------------------------------------------------- |
+| `make start-local`    | Start full dev stack (backend + Vite frontend HMR)   |
+| `make start-backend`  | Start backend only                                   |
+| `make start-frontend` | Start Vite frontend only (requires separate backend) |
+| `make test`           | Run all tests                                        |
+| `make lint`           | Format and lint all code                             |
+| `make build`          | Build for production                                 |
+| `make clean`          | Clean build artifacts                                |
 
 ---
 
@@ -47,7 +47,7 @@ Use the `Makefile` for all development tasks:
 
 - **Verify**: Always ensure `make test` passes before opening a PR.
 - **Add Tests**: Include or update tests for any new behaviors or bug fixes.
-- **Watch Mode**: Use `make test-watch` during active development.
+- **Watch Mode**: Use `make test-backend-watch` or `make test-frontend-watch` during active development.
 - **Coverage**: Check `make test-coverage` for larger logic changes.
 
 ---

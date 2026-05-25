@@ -137,6 +137,24 @@ const defaultViewToolbarConfig: Record<string, Record<string, unknown>> = {
     showAddButton: false,
     customActions: [],
   },
+  "most-used": {
+    title: "Most Used",
+    showViewToggle: true,
+    showSearch: true,
+    customActions: [],
+  },
+  "tag-cloud": {
+    title: "Tag Cloud",
+    showViewToggle: false,
+    showSearch: false,
+    customActions: [],
+  },
+  "folder-organizer": {
+    title: "Folders",
+    showViewToggle: false,
+    showSearch: false,
+    customActions: [],
+  },
 };
 
 export function UIProvider({ children }: { children: ReactNode }) {

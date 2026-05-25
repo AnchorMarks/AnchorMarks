@@ -34,7 +34,7 @@ make start-local
 
 ```bash
 # Start with Docker Compose using Makefile
-make run-docker
+make start-docker
 
 # Or use docker compose directly
 docker compose -f tooling/docker/docker-compose.yml up -d
@@ -98,8 +98,8 @@ Choose one of the following options:
 
 ```bash
 make start-local      # Full stack (backend + frontend with HMR)
-make dev           # Backend only (serves classic UI)
-make dev-vite      # Frontend only with HMR (requires separate backend)
+make start-backend   # Backend only
+make start-frontend  # Frontend only with HMR (requires separate backend)
 ```
 
 **Or use make help to see all available commands:**
@@ -112,7 +112,7 @@ make help          # Display all available Makefile targets
 
 Open http://localhost:3000 in your browser and create an account!
 
-If using `make start-local` or `make dev-vite`, you can also access:
+If using `make start-local` or `make start-frontend`, you can also access:
 
 - Vite dev frontend: http://localhost:5173 (with hot reload)
 
