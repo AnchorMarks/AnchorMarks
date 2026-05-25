@@ -26,7 +26,6 @@ interface DashboardGridProps {
     tags: TagAnalyticsItem[];
     cooccurrence: CooccurrenceItem[];
   };
-  onEditWidget?: (widgetId: string) => void;
   onRemoveWidget?: (widgetId: string) => void;
   onMoveWidget?: (widgetId: string, x: number, y: number) => void;
   onResizeWidget?: (widgetId: string, width: number, height: number) => void;
@@ -71,7 +70,6 @@ export function DashboardGrid({
   metricsByWidgetId = {},
   linkedWidgetIdByWidgetId = {},
   tagAnalyticsData,
-  onEditWidget,
   onRemoveWidget,
   onMoveWidget,
   onResizeWidget,
@@ -196,7 +194,6 @@ export function DashboardGrid({
                   linkedWidgetIdByWidgetId[widget.id] ?? widget.id
                 }
                 tagAnalyticsData={tagAnalyticsData}
-                onEdit={onEditWidget}
                 onRemove={onRemoveWidget}
                 onResizeWidget={onResizeWidget}
                 onSortWidget={onSortWidget}

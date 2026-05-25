@@ -25,7 +25,6 @@ interface DashboardWidgetProps {
     tags: TagAnalyticsItem[];
     cooccurrence: CooccurrenceItem[];
   };
-  onEdit?: (widgetId: string) => void;
   onRemove?: (widgetId: string) => void;
   onResizeWidget?: (widgetId: string, width: number, height: number) => void;
   onSortWidget?: (
@@ -114,7 +113,6 @@ export function DashboardWidget({
   metrics = {},
   linkedWidgetId,
   tagAnalyticsData,
-  onEdit,
   onRemove,
   onResizeWidget,
   onSortWidget,
@@ -369,16 +367,6 @@ export function DashboardWidget({
               )}
             </div>
           </div>
-          {isEditing ? (
-            <button
-              type="button"
-              className="btn-icon small"
-              aria-label="Edit widget"
-              onClick={() => onEdit?.(widget.id)}
-            >
-              <Icon name="edit" size={14} />
-            </button>
-          ) : null}
           <button
             type="button"
             className="btn-icon small remove-widget-btn"

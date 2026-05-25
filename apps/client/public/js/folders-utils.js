@@ -1,5 +1,5 @@
 "use strict";
-var foldersUtils = (() => {
+(() => {
   var a = Object.defineProperty;
   var u = Object.getOwnPropertyDescriptor;
   var m = Object.getOwnPropertyNames;
