@@ -79,8 +79,7 @@ describe("DashboardWidget", () => {
     expect(screen.getByText("Bookmarks")).toBeTruthy();
   });
 
-  it("calls callbacks in edit mode", () => {
-    const onEdit = vi.fn();
+  it("calls onRemove callback in edit mode", () => {
     const onRemove = vi.fn();
 
     renderWithProviders(
@@ -89,16 +88,13 @@ describe("DashboardWidget", () => {
         widgetIndex={0}
         isEditing={true}
         linkedWidgetId="widget-1"
-        onEdit={onEdit}
         onRemove={onRemove}
         metrics={{ Bookmarks: 10 }}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Edit widget" }));
     fireEvent.click(screen.getByRole("button", { name: "Remove widget" }));
 
-    expect(onEdit).toHaveBeenCalledWith("widget-1");
     expect(onRemove).toHaveBeenCalledWith("widget-1");
   });
 

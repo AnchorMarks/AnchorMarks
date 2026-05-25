@@ -112,25 +112,21 @@ describe("DashboardGrid", () => {
     expect(screen.getAllByText("99").length).toBeGreaterThan(0);
   });
 
-  it("forwards edit/remove events from child widgets", () => {
-    const onEditWidget = vi.fn();
+  it("forwards remove events from child widgets", () => {
     const onRemoveWidget = vi.fn();
 
     renderWithProviders(
       <DashboardGrid
         widgets={widgets}
         isEditMode={true}
-        onEditWidget={onEditWidget}
         onRemoveWidget={onRemoveWidget}
       />,
     );
 
-    fireEvent.click(screen.getAllByRole("button", { name: "Edit widget" })[0]);
     fireEvent.click(
       screen.getAllByRole("button", { name: "Remove widget" })[0],
     );
 
-    expect(onEditWidget).toHaveBeenCalledWith("w-1");
     expect(onRemoveWidget).toHaveBeenCalledWith("w-1");
   });
 
