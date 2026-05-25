@@ -17,19 +17,6 @@ function overlapScore(a: string[], b: string[]): number {
   }, 0);
 }
 
-// Collect all ancestor ids of a folder (to avoid suggesting them as parents,
-// which would create cycles).
-function getAncestorIds(folderId: string, allFolders: Folder[]): Set<string> {
-  const ids = new Set<string>([folderId]);
-  const byId = new Map(allFolders.map((f) => [f.id, f]));
-  let cur = byId.get(folderId);
-  while (cur?.parent_id) {
-    ids.add(cur.parent_id);
-    cur = byId.get(cur.parent_id);
-  }
-  return ids;
-}
-
 // Collect all descendant ids (to avoid suggesting children as parents).
 function getDescendantIds(folderId: string, allFolders: Folder[]): Set<string> {
   const ids = new Set<string>([folderId]);

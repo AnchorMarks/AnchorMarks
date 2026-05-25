@@ -89,6 +89,7 @@ interface BookmarksActions {
   setTotalCount: (val: number) => void;
   setWidgetDataCache: (id: string, val: Bookmark[]) => void;
   clearWidgetDataCache: () => void;
+  clearViewCache: () => void;
   setFilterConfig: (val: FilterConfig) => void;
   setTagMetadata: (
     val: Record<
@@ -152,6 +153,9 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
   const [bulkMode, setBulkMode] = useState(false);
   const loadBookmarksRequestSeq = useRef(0);
   const loadMoreBackoffUntilRef = useRef(0);
+  const viewCacheRef = useRef<
+    Map<string, { bookmarks: Bookmark[]; total: number }>
+  >(new Map());
 
   // Sync current state into the bridge store so non-React code always reads fresh values
   useEffect(() => {
@@ -197,6 +201,10 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
     setWidgetDataCacheState({});
   }, []);
 
+  const clearViewCache = useCallback(() => {
+    viewCacheRef.current.clear();
+  }, []);
+
   const resetPagination = useCallback(() => {
     setDisplayedCount(BOOKMARKS_PER_PAGE);
     setTotalCount(0);
@@ -225,8 +233,36 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
 
         if (currentView === "analytics") return;
 
-        setIsLoading(true);
-        resetPagination();
+        // Stale-while-revalidate: serve cached data instantly, then refresh silently.
+        // Views with URL-dependent or non-bookmark content are excluded from caching.
+        const cacheable = ![
+          "dashboard",
+          "analytics",
+          "tag-cloud",
+          "collection",
+        ].includes(currentView);
+        const cacheKey = cacheable
+          ? [
+              currentView,
+              currentFolder ?? "",
+              (activeFilters.tags ?? []).join(","),
+              activeFilters.tagMode ?? "OR",
+              activeFilters.search ?? "",
+              activeFilters.sort ?? "",
+            ].join("|")
+          : null;
+
+        const cached = cacheKey ? viewCacheRef.current.get(cacheKey) : null;
+        if (cached) {
+          setBookmarks(cached.bookmarks);
+          setRenderedBookmarks(cached.bookmarks);
+          setTotalCount(cached.total);
+          resetPagination();
+          // No setIsLoading(true) — silently refresh in background
+        } else {
+          setIsLoading(true);
+          resetPagination();
+        }
 
         const params = new URLSearchParams();
         params.append("limit", String(BOOKMARKS_PER_PAGE));
@@ -287,6 +323,13 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
         setBookmarks(data.bookmarks);
         setRenderedBookmarks(data.bookmarks);
         setTotalCount(data.total || data.bookmarks.length);
+
+        if (cacheKey) {
+          viewCacheRef.current.set(cacheKey, {
+            bookmarks: data.bookmarks,
+            total: data.total || data.bookmarks.length,
+          });
+        }
 
         if (data.tags) {
           const metadata: Record<
@@ -559,6 +602,7 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
     setTotalCount: useCallback((val) => setTotalCount(val), []),
     setWidgetDataCache,
     clearWidgetDataCache,
+    clearViewCache,
     setFilterConfig: useCallback((val) => setFilterConfig(val), []),
     setTagMetadata: useCallback((val) => setTagMetadata(val), []),
     setViewFolderIds: useCallback((val) => setViewFolderIds(val), []),
@@ -637,6 +681,7 @@ export function useBookmarks(): BookmarksContextValue {
       state?.setWidgetDataCache && state.setWidgetDataCache(id, val),
     clearWidgetDataCache: () =>
       state?.clearWidgetDataCache && state.clearWidgetDataCache(),
+    clearViewCache: () => state?.clearViewCache && state.clearViewCache(),
     setFilterConfig: (val: any) =>
       state?.setFilterConfig && state.setFilterConfig(val),
     setTagMetadata: (val: any) =>

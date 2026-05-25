@@ -7,7 +7,7 @@ import { api } from "@services/api.ts";
 import type { Bookmark } from "../types/index";
 
 export function useBookmarkActions() {
-  const { bookmarks, setBookmarks } = useBookmarks();
+  const { bookmarks, setBookmarks, clearViewCache } = useBookmarks();
   const { openBookmarkModal, closeModal } = useModal();
 
   const archiveBookmark = useCallback(
@@ -17,12 +17,13 @@ export function useBookmarkActions() {
         setBookmarks(
           bookmarks.map((b) => (b.id === id ? { ...b, is_archived: 1 } : b)),
         );
+        clearViewCache();
         showToast("Bookmark archived", "success");
       } catch (err) {
         showToast("Failed to archive bookmark", "error");
       }
     },
-    [bookmarks, setBookmarks],
+    [bookmarks, setBookmarks, clearViewCache],
   );
 
   const unarchiveBookmark = useCallback(
@@ -32,12 +33,13 @@ export function useBookmarkActions() {
         setBookmarks(
           bookmarks.map((b) => (b.id === id ? { ...b, is_archived: 0 } : b)),
         );
+        clearViewCache();
         showToast("Bookmark unarchived", "success");
       } catch (err) {
         showToast("Failed to unarchive bookmark", "error");
       }
     },
-    [bookmarks, setBookmarks],
+    [bookmarks, setBookmarks, clearViewCache],
   );
 
   const deleteBookmark = useCallback(
@@ -53,12 +55,13 @@ export function useBookmarkActions() {
       try {
         await api(`/bookmarks/${id}`, { method: "DELETE" });
         setBookmarks(bookmarks.filter((b) => b.id !== id));
+        clearViewCache();
         showToast("Bookmark deleted", "success");
       } catch (err: unknown) {
         showToast((err as Error).message, "error");
       }
     },
-    [bookmarks, setBookmarks],
+    [bookmarks, setBookmarks, clearViewCache],
   );
 
   const toggleFavorite = useCallback(
@@ -77,11 +80,12 @@ export function useBookmarkActions() {
             b.id === id ? { ...b, is_favorite: Boolean(newValue) } : b,
           ),
         );
+        clearViewCache();
       } catch (err: unknown) {
         showToast((err as Error).message, "error");
       }
     },
-    [bookmarks, setBookmarks],
+    [bookmarks, setBookmarks, clearViewCache],
   );
 
   const editBookmark = useCallback(
@@ -111,13 +115,14 @@ export function useBookmarkActions() {
           body: JSON.stringify(data),
         });
         setBookmarks([bookmark, ...bookmarks]);
+        clearViewCache();
         closeModal();
         showToast("Bookmark added!", "success");
       } catch (err: unknown) {
         showToast((err as Error).message, "error");
       }
     },
-    [bookmarks, setBookmarks, closeModal],
+    [bookmarks, setBookmarks, clearViewCache, closeModal],
   );
 
   const updateBookmark = useCallback(
@@ -128,13 +133,14 @@ export function useBookmarkActions() {
           body: JSON.stringify(data),
         });
         setBookmarks(bookmarks.map((b) => (b.id === id ? bookmark : b)));
+        clearViewCache();
         closeModal();
         showToast("Bookmark updated", "success");
       } catch (err: unknown) {
         showToast((err as Error).message, "error");
       }
     },
-    [bookmarks, setBookmarks, closeModal],
+    [bookmarks, setBookmarks, clearViewCache, closeModal],
   );
 
   return {

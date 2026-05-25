@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderWithProviders, screen, fireEvent } from "../test-utils";
+import { renderWithProviders, screen } from "../test-utils";
 import { PreviewWidgetContent } from "./PreviewWidgetContent.tsx";
 import type { Bookmark } from "../types/index";
 
