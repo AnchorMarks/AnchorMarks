@@ -458,10 +458,7 @@ export function getOmnibarCommands(filterText: string = ""): Command[] {
         if (searchInput) searchInput.value = "";
 
         // Switch to bookmarks view if not already there
-        if (
-          state.currentView !== "all" &&
-          state.currentView !== "folder"
-        ) {
+        if (state.currentView !== "all" && state.currentView !== "folder") {
           state.setCurrentView("all");
           state.setCurrentFolder(null);
           const viewTitle = document.getElementById("view-title");

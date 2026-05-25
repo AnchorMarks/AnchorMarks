@@ -213,7 +213,10 @@ export function BookmarksList() {
         setDisplayedCount(displayedCount + BOOKMARKS_PER_PAGE);
       }
     } catch (err) {
-      if (err instanceof Error && err.message.toLowerCase().includes("rate limit")) {
+      if (
+        err instanceof Error &&
+        err.message.toLowerCase().includes("rate limit")
+      ) {
         backoffUntilRef.current = Date.now() + 60_000;
       }
     } finally {

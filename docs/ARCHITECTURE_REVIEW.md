@@ -10,16 +10,16 @@ AnchorMarks is a self-hosted bookmark manager. Users register an account, save U
 
 ### Key Modules and Responsibilities
 
-| Module | Location | Responsibility |
-|---|---|---|
-| Express API server | `apps/server/` | All data mutations, auth, business logic |
-| SQLite + WAL | `apps/server/models/` | Persistent storage; FTS5 for full-text search |
-| React SPA | `apps/client/src/` | UI, context state, API calls |
-| Auth subsystem | `server/middleware/`, `controllers/authController` | JWT access/refresh tokens, CSRF, rate limiting |
-| Metadata pipeline | `server/services/metadata*`, `favicon*`, `thumbnail*` | Async URL enrichment after save |
-| WebSocket service | `server/services/websocketService.js` | Push invalidation signals to all tabs |
-| AI tag service | `server/services/aiTagService.js` | Optional OpenAI/Ollama tag suggestions |
-| Browser extension | `tooling/extension/` | In-browser quick-save |
+| Module             | Location                                              | Responsibility                                 |
+| ------------------ | ----------------------------------------------------- | ---------------------------------------------- |
+| Express API server | `apps/server/`                                        | All data mutations, auth, business logic       |
+| SQLite + WAL       | `apps/server/models/`                                 | Persistent storage; FTS5 for full-text search  |
+| React SPA          | `apps/client/src/`                                    | UI, context state, API calls                   |
+| Auth subsystem     | `server/middleware/`, `controllers/authController`    | JWT access/refresh tokens, CSRF, rate limiting |
+| Metadata pipeline  | `server/services/metadata*`, `favicon*`, `thumbnail*` | Async URL enrichment after save                |
+| WebSocket service  | `server/services/websocketService.js`                 | Push invalidation signals to all tabs          |
+| AI tag service     | `server/services/aiTagService.js`                     | Optional OpenAI/Ollama tag suggestions         |
+| Browser extension  | `tooling/extension/`                                  | In-browser quick-save                          |
 
 ### Major Strengths
 
@@ -62,27 +62,27 @@ Full-text search is maintained via `INSERT`/`UPDATE`/`DELETE` triggers on the `b
 **1. Mixed language in the monorepo (JS server, TS client)**
 The server (`apps/server/`) is plain JavaScript with no type checking. The client is TypeScript. There is no shared schema or generated types. Any API contract drift is caught only at runtime.
 
-*Recommendation:* Add a `apps/shared/` package with Zod schemas that both the server (already uses Zod) and client import. The Zod `.infer<>` utility produces TypeScript types from schemas with no extra work. This closes the contract gap without a full rewrite.
+_Recommendation:_ Add a `apps/shared/` package with Zod schemas that both the server (already uses Zod) and client import. The Zod `.infer<>` utility produces TypeScript types from schemas with no extra work. This closes the contract gap without a full rewrite.
 
 **2. `BookmarksProvider` is over-loaded**
 `apps/client/src/contexts/BookmarksContext.tsx` owns: fetch logic, filter state, pagination state, bulk selection, and WebSocket-triggered invalidation. A change to filter logic requires understanding all six concerns simultaneously.
 
-*Recommendation:* Extract `useBookmarkFilters` and `useBulkSelection` into standalone hooks. The context becomes a data provider; hooks compose on top.
+_Recommendation:_ Extract `useBookmarkFilters` and `useBulkSelection` into standalone hooks. The context becomes a data provider; hooks compose on top.
 
 **3. Inline SQL strings in model files**
 SQL is written as raw template literals scattered across `bookmark.js`, `folder.js`, `tag.js`, etc. There is no query builder, no parameterization helper, and no central place to audit queries.
 
-*Recommendation:* No ORM is needed, but extracting SQL into named constants at the top of each model file (e.g., `const FIND_BY_USER = 'SELECT ...'`) makes queries grep-able and auditable.
+_Recommendation:_ No ORM is needed, but extracting SQL into named constants at the top of each model file (e.g., `const FIND_BY_USER = 'SELECT ...'`) makes queries grep-able and auditable.
 
 **4. No persistent job queue**
 `metadataQueueService.js` uses an in-memory queue processed with `setImmediate`/`setTimeout`. Server restart = silent data loss for all pending favicon/thumbnail jobs.
 
-*Recommendation:* Use [better-queue](https://www.npmjs.com/package/better-queue) with SQLite persistence, or simply write pending jobs to a `background_jobs` table on enqueue and mark them done on completion. The existing SQLite dependency makes this zero-cost infrastructure-wise.
+_Recommendation:_ Use [better-queue](https://www.npmjs.com/package/better-queue) with SQLite persistence, or simply write pending jobs to a `background_jobs` table on enqueue and mark them done on completion. The existing SQLite dependency makes this zero-cost infrastructure-wise.
 
 **5. `config/index.js` auto-generates `COOKIE_PREFIX` from `JWT_SECRET`**
 If `JWT_SECRET` changes (e.g., a credential rotation), `COOKIE_PREFIX` also changes, silently invalidating all existing sessions with a confusing UX failure rather than a clean logout prompt.
 
-*Recommendation:* Make `COOKIE_PREFIX` an independent required environment variable in production. Document that it must not change between deployments.
+_Recommendation:_ Make `COOKIE_PREFIX` an independent required environment variable in production. Document that it must not change between deployments.
 
 ---
 
@@ -91,9 +91,9 @@ If `JWT_SECRET` changes (e.g., a credential rotation), `COOKIE_PREFIX` also chan
 **A. `context-bridge.ts` — imperative pub/sub between vanilla JS and React**
 The bridge exists because some features (keyboard shortcuts, omnibar) are implemented as vanilla JS classes rather than React components, requiring a global event bus to trigger React state changes.
 
-*Risk:* This creates invisible coupling. Any rename of a context method requires updating both the context and the bridge without compiler help.
+_Risk:_ This creates invisible coupling. Any rename of a context method requires updating both the context and the bridge without compiler help.
 
-*Recommendation:* Either migrate the keyboard/omnibar features to React hooks (preferred), or document the bridge exhaustively and add integration tests that cover each bridge channel.
+_Recommendation:_ Either migrate the keyboard/omnibar features to React hooks (preferred), or document the bridge exhaustively and add integration tests that cover each bridge channel.
 
 **B. `useSmartTags`, `useSmartCollections`, `useSmartInsights` are duplicated in shape**
 All three hooks follow the same pattern: fetch on mount, return `{ data, loading, error }`. They could be collapsed into a single `useSmartFeature(endpoint)` generic hook, reducing ~150 lines to ~30.
@@ -101,33 +101,33 @@ All three hooks follow the same pattern: fetch on mount, return `{ data, loading
 **C. Dashboard widget config stored as JSON columns**
 `dashboard_views.config` and `user_settings.settings_json` are JSON blobs. Schema changes to widget config are invisible to SQLite and require careful versioning.
 
-*Recommendation:* Add a `config_version` integer column to `dashboard_views`. On read, migrate old config shapes in the model layer before returning to the client.
+_Recommendation:_ Add a `config_version` integer column to `dashboard_views`. On read, migrate old config shapes in the model layer before returning to the client.
 
 **D. Puppeteer in the main process**
 `thumbnailService.js` launches Puppeteer in the same Node.js process as the API server. A Puppeteer crash (which is common with complex pages) can take down the API.
 
-*Recommendation:* Spawn Puppeteer in a child process or a dedicated worker. Use `child_process.fork` with a message-based interface. The thumbnail service already has a `THUMBNAIL_ENABLED` flag that makes this easy to isolate.
+_Recommendation:_ Spawn Puppeteer in a child process or a dedicated worker. Use `child_process.fork` with a message-based interface. The thumbnail service already has a `THUMBNAIL_ENABLED` flag that makes this easy to isolate.
 
 ---
 
 ### Security Concerns
 
-| Issue | Severity | Details |
-|---|---|---|
-| WebSocket auth drift | Medium | WS connection authenticated at handshake; access token expiry (15m) is not enforced per-message. A session with a revoked/expired token stays connected until the socket drops. |
-| `COOKIE_PREFIX` tied to `JWT_SECRET` | Low | Credential rotation causes silent session invalidation with no user-facing explanation. |
-| Audit log is opt-in | Low | `SECURITY_LOG_FILE` is not set by default. Security-relevant events (failed logins, password changes) are silently dropped in the default configuration. |
-| No Content-Length limit on import | Low | `/api/import` accepts multipart upload with no documented file size cap, which could exhaust server memory on a large HTML export. |
+| Issue                                | Severity | Details                                                                                                                                                                         |
+| ------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WebSocket auth drift                 | Medium   | WS connection authenticated at handshake; access token expiry (15m) is not enforced per-message. A session with a revoked/expired token stays connected until the socket drops. |
+| `COOKIE_PREFIX` tied to `JWT_SECRET` | Low      | Credential rotation causes silent session invalidation with no user-facing explanation.                                                                                         |
+| Audit log is opt-in                  | Low      | `SECURITY_LOG_FILE` is not set by default. Security-relevant events (failed logins, password changes) are silently dropped in the default configuration.                        |
+| No Content-Length limit on import    | Low      | `/api/import` accepts multipart upload with no documented file size cap, which could exhaust server memory on a large HTML export.                                              |
 
 ---
 
 ### Performance Concerns
 
-| Issue | Notes |
-|---|---|
-| `bookmark_count` is computed per-query | Folder listing joins and counts bookmark rows each request. Fine at thousands of bookmarks; needs a materialized count column at millions. |
-| FTS5 rebuild on bulk import | Triggers fire row-by-row during import. A 10k-bookmark import fires 10k FTS insert triggers synchronously. Consider disabling triggers, bulk inserting, then rebuilding FTS in one pass. |
-| No HTTP-level cache headers on static favicon files | Favicons served from `/apps/server/public/` are re-fetched by the browser on every navigation without `Cache-Control: max-age` headers. |
+| Issue                                               | Notes                                                                                                                                                                                    |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bookmark_count` is computed per-query              | Folder listing joins and counts bookmark rows each request. Fine at thousands of bookmarks; needs a materialized count column at millions.                                               |
+| FTS5 rebuild on bulk import                         | Triggers fire row-by-row during import. A 10k-bookmark import fires 10k FTS insert triggers synchronously. Consider disabling triggers, bulk inserting, then rebuilding FTS in one pass. |
+| No HTTP-level cache headers on static favicon files | Favicons served from `/apps/server/public/` are re-fetched by the browser on every navigation without `Cache-Control: max-age` headers.                                                  |
 
 ---
 
@@ -466,4 +466,4 @@ On the read path, the React context providers call the API, receive JSON, and st
 
 ---
 
-*Review complete. The codebase is structurally sound and security-conscious. The highest-priority improvements are making the metadata queue crash-safe (persistent job table), sharing Zod types between server and client, and isolating Puppeteer from the main API process.*
+_Review complete. The codebase is structurally sound and security-conscious. The highest-priority improvements are making the metadata queue crash-safe (persistent job table), sharing Zod types between server and client, and isolating Puppeteer from the main API process._

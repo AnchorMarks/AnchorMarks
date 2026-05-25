@@ -42,7 +42,9 @@ describe("GeneralSettings", () => {
 
     fireEvent.click(screen.getByRole("checkbox", { name: /Snap to Grid/i }));
 
-    expect(generalSettingsMocks.mockUI.setSnapToGrid).toHaveBeenCalledWith(true);
+    expect(generalSettingsMocks.mockUI.setSnapToGrid).toHaveBeenCalledWith(
+      true,
+    );
     expect(generalSettingsMocks.saveSettingsSpy).toHaveBeenCalledWith({
       snap_to_grid: 1,
     });

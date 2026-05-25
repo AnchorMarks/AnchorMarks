@@ -868,9 +868,8 @@ export async function applyFilters(): Promise<void> {
   // Pass vanilla state values explicitly so the bridge doesn't rely on
   // UIBridge being synced (React state updates are async).
   try {
-    const { getBookmarksBridge } = await import(
-      "../../contexts/context-bridge.ts"
-    );
+    const { getBookmarksBridge } =
+      await import("../../contexts/context-bridge.ts");
     const bridge = getBookmarksBridge();
     // Sync vanilla filter state back to React so the sidebar reflects active filters
     bridge.setFilterConfig({

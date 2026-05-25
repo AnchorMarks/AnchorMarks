@@ -58,11 +58,14 @@ export function RichBookmarkCard({
   onSelect,
 }: RichBookmarkCardProps) {
   const { hideFavicons } = useUI();
-  const { tagMetadata, selectedBookmarks, bookmarks, setBookmarks } = useBookmarks();
+  const { tagMetadata, selectedBookmarks, bookmarks, setBookmarks } =
+    useBookmarks();
 
   const [autoImage, setAutoImage] = useState<string | undefined>(undefined);
   const bookmarksRef = useRef(bookmarks);
-  useEffect(() => { bookmarksRef.current = bookmarks; }, [bookmarks]);
+  useEffect(() => {
+    bookmarksRef.current = bookmarks;
+  }, [bookmarks]);
 
   const isSelected = selectedBookmarks.has(bookmark.id);
 

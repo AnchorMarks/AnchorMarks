@@ -47,7 +47,12 @@ export default function BookmarkModal() {
       defaultFolderApplied.current = true;
       setBookmarkFormData({ folderId: currentFolder });
     }
-  }, [bookmarkFormData.id, bookmarkFormData.folderId, currentFolder, setBookmarkFormData]);
+  }, [
+    bookmarkFormData.id,
+    bookmarkFormData.folderId,
+    currentFolder,
+    setBookmarkFormData,
+  ]);
 
   useEffect(() => {
     if (modalRef.current) {
@@ -313,7 +318,11 @@ export default function BookmarkModal() {
           <div className="form-group">
             <label htmlFor="bookmark-folder-input">Folder</label>
             <div
-              style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}
+              style={{
+                display: "flex",
+                gap: "0.5rem",
+                alignItems: "flex-start",
+              }}
             >
               <div
                 ref={folderDropdownRef}
@@ -362,7 +371,10 @@ export default function BookmarkModal() {
                       style={{
                         padding: "0.5rem 1rem",
                         cursor: "pointer",
-                        color: bookmarkFormData.folderId === null ? "var(--primary-500)" : "var(--text-tertiary)",
+                        color:
+                          bookmarkFormData.folderId === null
+                            ? "var(--primary-500)"
+                            : "var(--text-tertiary)",
                         fontStyle: "italic",
                       }}
                       className="folder-dropdown-option"
@@ -370,7 +382,13 @@ export default function BookmarkModal() {
                       None
                     </div>
                     {filteredFolders.length === 0 && (
-                      <div style={{ padding: "0.5rem 1rem", color: "var(--text-tertiary)", fontStyle: "italic" }}>
+                      <div
+                        style={{
+                          padding: "0.5rem 1rem",
+                          color: "var(--text-tertiary)",
+                          fontStyle: "italic",
+                        }}
+                      >
                         No folders found
                       </div>
                     )}
@@ -382,8 +400,14 @@ export default function BookmarkModal() {
                         style={{
                           padding: "0.5rem 1rem",
                           cursor: "pointer",
-                          fontWeight: bookmarkFormData.folderId === folder.id ? 600 : undefined,
-                          color: bookmarkFormData.folderId === folder.id ? "var(--primary-500)" : "var(--text-primary)",
+                          fontWeight:
+                            bookmarkFormData.folderId === folder.id
+                              ? 600
+                              : undefined,
+                          color:
+                            bookmarkFormData.folderId === folder.id
+                              ? "var(--primary-500)"
+                              : "var(--text-primary)",
                         }}
                         className="folder-dropdown-option"
                       >

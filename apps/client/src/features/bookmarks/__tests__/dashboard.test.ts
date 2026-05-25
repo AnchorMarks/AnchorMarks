@@ -10,45 +10,49 @@ import {
   autoPositionWidgets,
 } from "@features/bookmarks/dashboard.ts";
 
-const { apiMock, loadSettingsSpy, saveSettingsSpy, promptDialogSpy } = vi.hoisted(() => ({
-  apiMock: vi.fn((endpoint: string, options?: RequestInit) => {
-    if (endpoint === "/dashboard/views" && options?.method === "POST") {
-      const payload = JSON.parse(String(options.body));
-      return Promise.resolve({
-        id: "view-created",
-        name: payload.name,
-        config: payload.config,
-      });
-    }
-    if (endpoint === "/dashboard/views") return Promise.resolve([]);
-    if (String(endpoint) === "/dashboard/views/view-123" && options?.method === "PUT") {
-      const payload = JSON.parse(String(options.body));
-      return Promise.resolve({
-        id: "view-123",
-        name: "Work View",
-        config: payload.config,
-      });
-    }
-    if (String(endpoint).includes("/restore"))
-      return Promise.resolve({ success: true });
-    if (String(endpoint).includes("/bookmarks?folder_id=legacy-folder")) {
-      return Promise.resolve({
-        bookmarks: [
-          {
-            id: "b1",
-            title: "Legacy Bookmark",
-            url: "https://example.com",
-            folder_id: "legacy-folder",
-          },
-        ],
-      });
-    }
-    return Promise.resolve([]);
-  }),
-  loadSettingsSpy: vi.fn(() => Promise.resolve()),
-  saveSettingsSpy: vi.fn(() => Promise.resolve()),
-  promptDialogSpy: vi.fn(() => Promise.resolve("Work Dashboard")),
-}));
+const { apiMock, loadSettingsSpy, saveSettingsSpy, promptDialogSpy } =
+  vi.hoisted(() => ({
+    apiMock: vi.fn((endpoint: string, options?: RequestInit) => {
+      if (endpoint === "/dashboard/views" && options?.method === "POST") {
+        const payload = JSON.parse(String(options.body));
+        return Promise.resolve({
+          id: "view-created",
+          name: payload.name,
+          config: payload.config,
+        });
+      }
+      if (endpoint === "/dashboard/views") return Promise.resolve([]);
+      if (
+        String(endpoint) === "/dashboard/views/view-123" &&
+        options?.method === "PUT"
+      ) {
+        const payload = JSON.parse(String(options.body));
+        return Promise.resolve({
+          id: "view-123",
+          name: "Work View",
+          config: payload.config,
+        });
+      }
+      if (String(endpoint).includes("/restore"))
+        return Promise.resolve({ success: true });
+      if (String(endpoint).includes("/bookmarks?folder_id=legacy-folder")) {
+        return Promise.resolve({
+          bookmarks: [
+            {
+              id: "b1",
+              title: "Legacy Bookmark",
+              url: "https://example.com",
+              folder_id: "legacy-folder",
+            },
+          ],
+        });
+      }
+      return Promise.resolve([]);
+    }),
+    loadSettingsSpy: vi.fn(() => Promise.resolve()),
+    saveSettingsSpy: vi.fn(() => Promise.resolve()),
+    promptDialogSpy: vi.fn(() => Promise.resolve("Work Dashboard")),
+  }));
 
 // Mock API so dropdown loads without network and so we can assert call counts
 vi.mock("@services/api.ts", () => ({

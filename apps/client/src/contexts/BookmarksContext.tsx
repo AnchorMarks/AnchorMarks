@@ -385,7 +385,10 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
       setRenderedBookmarks(newBookmarks);
       setDisplayedCount((prev) => prev + data.bookmarks.length);
     } catch (err) {
-      if (err instanceof Error && err.message.toLowerCase().includes("rate limit")) {
+      if (
+        err instanceof Error &&
+        err.message.toLowerCase().includes("rate limit")
+      ) {
         loadMoreBackoffUntilRef.current = Date.now() + 60_000;
       }
       console.error("Failed to load more bookmarks:", err);

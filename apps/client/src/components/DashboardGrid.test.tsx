@@ -4,10 +4,12 @@ import { DashboardGrid } from "./DashboardGrid.tsx";
 import type { DashboardWidget, Bookmark } from "../types/index";
 
 const dndMocks = vi.hoisted(() => ({
-  onDragEnd: null as ((event: {
-    active: { id: string };
-    delta: { x: number; y: number };
-  }) => void) | null,
+  onDragEnd: null as
+    | ((event: {
+        active: { id: string };
+        delta: { x: number; y: number };
+      }) => void)
+    | null,
   setNodeRef: vi.fn(),
 }));
 
@@ -31,7 +33,7 @@ vi.mock("@dnd-kit/core", async () => {
       return children;
     },
     useSensor: vi.fn(() => ({})),
-    useSensors: vi.fn(() => ([])),
+    useSensors: vi.fn(() => []),
     useDraggable: vi.fn(() => ({
       attributes: {},
       listeners: {},
