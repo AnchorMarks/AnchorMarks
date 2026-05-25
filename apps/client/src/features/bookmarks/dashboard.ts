@@ -1234,12 +1234,24 @@ async function showWidgetInBookmarksView(
   widgetId: string,
 ): Promise<void> {
   try {
+    state.setCurrentCollection(null);
+
     if (widgetType === "folder") {
-      state.setFilterConfig({ ...state.filterConfig, folder: widgetId });
-      await state.setCurrentView("bookmarks");
+      state.setCurrentFolder(widgetId);
+      state.setFilterConfig({
+        ...state.filterConfig,
+        folder: widgetId,
+        tags: [],
+      });
+      await state.setCurrentView("all");
     } else if (widgetType === "tag") {
-      state.setFilterConfig({ ...state.filterConfig, tags: [widgetId] });
-      await state.setCurrentView("bookmarks");
+      state.setCurrentFolder(null);
+      state.setFilterConfig({
+        ...state.filterConfig,
+        folder: null,
+        tags: [widgetId],
+      });
+      await state.setCurrentView("all");
     }
 
     const { loadBookmarks } = await import("@features/bookmarks/bookmarks.ts");

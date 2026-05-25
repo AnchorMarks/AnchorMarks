@@ -381,6 +381,64 @@ describe("Dashboard interactivity helpers", () => {
     expect(loadBookmarksSpy).toHaveBeenCalled();
   });
 
+  it("show in bookmarks from a folder widget switches to all view with folder filter", async () => {
+    state.setCurrentFolder(null);
+    state.setFilterConfig({
+      ...state.filterConfig,
+      folder: null,
+      tags: [],
+    });
+    state.setDashboardWidgets([
+      {
+        id: "widget-folder",
+        type: "folder",
+        x: 0,
+        y: 0,
+        width: 220,
+        height: 180,
+        title: "Folder Widget",
+        config: { linkedId: "folder-123" },
+      },
+    ] as any);
+
+    await renderDashboard();
+
+    await vi.waitFor(() => {
+      expect(document.querySelector(".widget-options-btn")).toBeTruthy();
+    });
+
+    loadBookmarksSpy.mockClear();
+
+    const optionsBtn = document.querySelector(
+      ".widget-options-btn",
+    ) as HTMLButtonElement;
+    optionsBtn.click();
+
+    await vi.waitFor(() => {
+      const showButton = Array.from(
+        document.querySelectorAll(".widget-option"),
+      ).find((el) => el.textContent?.trim() === "Show in Bookmarks");
+      expect(showButton).toBeTruthy();
+    });
+
+    const showInBookmarksBtn = Array.from(
+      document.querySelectorAll(".widget-option"),
+    ).find((el) => el.textContent?.trim() === "Show in Bookmarks") as
+      | HTMLButtonElement
+      | undefined;
+
+    expect(showInBookmarksBtn).toBeTruthy();
+    showInBookmarksBtn!.click();
+
+    await vi.waitFor(() => {
+      expect(state.currentView).toBe("all");
+      expect(state.currentFolder).toBe("folder-123");
+      expect(state.filterConfig.folder).toBe("folder-123");
+      expect(state.filterConfig.tags).toEqual([]);
+      expect(loadBookmarksSpy).toHaveBeenCalled();
+    });
+  });
+
   it("resizing a widget updates its size state", async () => {
     state.setDashboardWidgets([
       {
