@@ -55,7 +55,7 @@ function setTokenCookies(res, accessToken, refreshToken, csrfToken) {
 }
 
 function generateCsrfToken() {
-  return uuidv4().replace(/-/g, "");
+  return require("crypto").randomBytes(32).toString("hex");
 }
 
 function createExampleBookmarks(db, userId, folderId = null, fetchFavicon) {

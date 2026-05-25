@@ -284,8 +284,8 @@ function updateBookmark(req, res) {
       req.user.id,
       req.params.id,
     );
-    if (updated)
-      updated.tags_detailed = parseTagsDetailed(updated.tags_detailed);
+    if (!updated) return res.status(404).json({ error: "Bookmark not found" });
+    updated.tags_detailed = parseTagsDetailed(updated.tags_detailed);
     res.json(updated);
   } catch (err) {
     return reportAndSend(res, err, logger, "Error updating bookmark");
@@ -400,7 +400,7 @@ async function generateThumbnail(req, res) {
     if (!bookmark) return res.status(404).json({ error: "Bookmark not found" });
     if (bookmark.thumbnail_local)
       return res.json({ thumbnail_local: bookmark.thumbnail_local });
-    if (isPrivateAddress(bookmark.url))
+    if (await isPrivateAddress(bookmark.url))
       return res
         .status(400)
         .json({ error: "Cannot generate thumbnail for private addresses" });

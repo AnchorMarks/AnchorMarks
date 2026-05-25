@@ -10,6 +10,7 @@ function initializeDatabase(DB_PATH) {
   try {
     db = new Database(DB_PATH);
     db.pragma("journal_mode = WAL");
+    db.pragma("foreign_keys = ON");
     db.exec(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,

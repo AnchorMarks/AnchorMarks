@@ -18,7 +18,7 @@ const hexColor = optionalString.pipe(
     .regex(/^#[0-9A-Fa-f]{3,8}$/, "Color must be a valid hex color code")
     .optional(),
 );
-const uuidLike = z.string().uuid().optional().or(z.string().min(1));
+const uuidLike = z.string().uuid().optional();
 const MAX_URL_LENGTH = 2048;
 const MAX_STRING_LENGTH = 10000;
 
@@ -38,6 +38,29 @@ const httpUrl = z
     { message: "URL must use http or https" },
   );
 
+// Optional URL — blank/undefined is allowed, but if provided must be http/https
+const optionalHttpUrl = z
+  .string()
+  .optional()
+  .transform((s) => (s === "" ? undefined : s))
+  .pipe(
+    z
+      .string()
+      .max(MAX_URL_LENGTH)
+      .refine(
+        (s) => {
+          try {
+            const u = new URL(s);
+            return ["http:", "https:"].includes(u.protocol);
+          } catch {
+            return false;
+          }
+        },
+        { message: "og_image must be an http or https URL" },
+      )
+      .optional(),
+  );
+
 // ---- Auth ----
 const authRegister = z
   .object({
@@ -45,7 +68,7 @@ const authRegister = z
       .string()
       .min(1, "Email is required")
       .transform((s) => s.trim().toLowerCase()),
-    password: z.string().min(6, "Password must be at least 6 characters"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
   })
   .strict();
 
@@ -73,7 +96,7 @@ const authPassword = z
     currentPassword: z.string().min(1, "Current password is required"),
     newPassword: z
       .string()
-      .min(6, "New password must be at least 6 characters"),
+      .min(8, "New password must be at least 8 characters"),
   })
   .strict();
 
@@ -86,7 +109,7 @@ const bookmarkCreate = z
     folder_id: uuidLike,
     tags: optionalString,
     color: optionalString,
-    og_image: optionalString,
+    og_image: optionalHttpUrl,
     tag_colors: z
       .union([
         z.array(z.object({ name: z.string(), color: z.string() })),
@@ -105,7 +128,7 @@ const bookmarkUpdate = z
     folder_id: uuidLike,
     tags: optionalString,
     color: optionalString,
-    og_image: optionalString,
+    og_image: optionalHttpUrl,
     tag_colors: z
       .union([
         z.array(z.object({ name: z.string(), color: z.string() })),

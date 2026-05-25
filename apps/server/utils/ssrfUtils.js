@@ -79,10 +79,14 @@ async function fetchFavicon(
     const urlObj = new URL(url);
     if (!["http:", "https:"].includes(urlObj.protocol)) return null;
 
-    // Block private/loopback targets to avoid SSRF
-    if (await isPrivateAddress(url)) {
+    // Resolve hostname to a verified public IP to prevent DNS-rebinding attacks.
+    // resolveToPublicIp throws if the hostname resolves only to private addresses.
+    try {
+      await resolveToPublicIp(urlObj.hostname);
+    } catch {
       return null;
     }
+
     const domain = urlObj.hostname;
     const faviconFilename = `${domain.replace(/[^a-zA-Z0-9]/g, "_")}.png`;
     const localPath = path.join(FAVICONS_DIR, faviconFilename);

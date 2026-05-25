@@ -45,10 +45,6 @@ async function fetchUrlMetadata(url, redirectCount = 0) {
         "Accept-Language": "en-US,en;q=0.5",
       },
     };
-    if (isHttps && config.NODE_ENV === "test") {
-      options.agent = new https.Agent({ rejectUnauthorized: false });
-    }
-
     const request = protocol.request(options, (response) => {
       // Follow redirects
       if (

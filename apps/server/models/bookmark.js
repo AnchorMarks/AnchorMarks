@@ -589,16 +589,7 @@ function getMostClickedForDomain(db, userId, domain, limit = 5) {
     .all(userId, `%${domain}%`, limit);
 }
 
-function incrementClick(db, a, b) {
-  // Accept either (db, userId, id) or (db, id, userId)
-  let id, userId;
-  if (typeof a === "string" && a.includes("-")) {
-    id = a;
-    userId = b;
-  } else {
-    userId = a;
-    id = b;
-  }
+function incrementClick(db, id, userId) {
   return db
     .prepare(
       "UPDATE bookmarks SET click_count = click_count + 1, last_clicked = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?",
@@ -615,8 +606,6 @@ module.exports = {
   updateBookmark,
   deleteBookmark,
   incrementClick,
-};
-module.exports = Object.assign(module.exports, {
   deleteAllForUser,
   setThumbnailLocal,
   findBookmarkIdByUrl,
@@ -624,4 +613,4 @@ module.exports = Object.assign(module.exports, {
   getSampleForSuggestion,
   getRecentCountForDomain,
   getMostClickedForDomain,
-});
+};

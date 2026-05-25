@@ -12,6 +12,8 @@ const compression = require("compression");
 const fs = require("fs");
 const helmet = require("helmet");
 
+const { logger } = require("./lib/logger");
+
 // Read app version from root package.json
 let APP_VERSION = "unknown";
 try {
@@ -59,7 +61,6 @@ app.set("appVersion", APP_VERSION);
 // Audit log retention: run daily (once at startup and then every 24h)
 const AUDIT_RETENTION_INTERVAL_MS = 24 * 60 * 60 * 1000;
 let auditRetentionTimer = null;
-const { logger } = require("./lib/logger");
 if (config.NODE_ENV !== "test") {
   function runAuditRetention() {
     try {

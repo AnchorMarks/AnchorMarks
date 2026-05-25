@@ -8,7 +8,7 @@ import * as state from "@features/state.ts";
 import type { User } from "../types/index";
 
 // Request deduplication: cache pending requests to prevent duplicate API calls
-const pendingRequests = new Map<string, Promise<any>>();
+const pendingRequests = new Map<string, Promise<unknown>>();
 
 // Request metadata for cleanup
 const requestMetadata = new Map<string, { timestamp: number }>();
@@ -128,7 +128,7 @@ export async function api<T = unknown>(
       pendingRequests.delete(requestKey);
       requestMetadata.delete(requestKey);
     } else {
-      return existingPromise;
+      return existingPromise as Promise<T>;
     }
   }
 
@@ -147,10 +147,8 @@ export async function api<T = unknown>(
     // imported at module scope. This ensures tests that set values on the
     // state module (via import) are reflected here.
     try {
-      csrfToken =
-        state && typeof (state as any).csrfToken !== "undefined"
-          ? (state as any).csrfToken
-          : null;
+      const legacyState = state as { csrfToken?: string };
+      csrfToken = legacyState.csrfToken ?? null;
     } catch {
       csrfToken = null;
     }
@@ -175,9 +173,8 @@ export async function api<T = unknown>(
     // http://localhost so fetch doesn't throw when tests call api(). In the
     // browser we keep using API_BASE as-is.
     // If tests have mocked global.fetch (vitest/vi.fn), allow relative URLs
-    const globalFetch: any = (globalThis as any).fetch;
-    const isFetchMock =
-      globalFetch && typeof globalFetch === "function" && !!globalFetch.mock;
+    const globalFetch = (globalThis as { fetch?: { mock?: unknown } }).fetch;
+    const isFetchMock = !!globalFetch?.mock;
 
     const baseForFetch =
       typeof window !== "undefined" ||

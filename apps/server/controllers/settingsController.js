@@ -11,13 +11,17 @@ const { v4: uuidv4 } = require("uuid");
 const { logger } = require("../lib/logger");
 const { reportAndSend } = require("../lib/errors");
 
-function formatSettings(settings) {
-  let extra = {};
+function safeParse(json, fallback) {
+  if (!json) return fallback;
   try {
-    extra = settings.settings_json ? JSON.parse(settings.settings_json) : {};
+    return JSON.parse(json);
   } catch {
-    extra = {};
+    return fallback;
   }
+}
+
+function formatSettings(settings) {
+  const extra = safeParse(settings.settings_json, {});
   return {
     view_mode: settings.view_mode || "grid",
     hide_favicons: settings.hide_favicons === 1,
@@ -26,19 +30,11 @@ function formatSettings(settings) {
     rich_link_previews_enabled: settings.rich_link_previews_enabled === 1,
     theme: settings.theme || "dark",
     dashboard_mode: settings.dashboard_mode || "folder",
-    dashboard_tags: settings.dashboard_tags
-      ? JSON.parse(settings.dashboard_tags)
-      : [],
+    dashboard_tags: safeParse(settings.dashboard_tags, []),
     dashboard_sort: settings.dashboard_sort || "updated_desc",
-    widget_order: settings.widget_order
-      ? JSON.parse(settings.widget_order)
-      : {},
-    dashboard_widgets: settings.dashboard_widgets
-      ? JSON.parse(settings.dashboard_widgets)
-      : [],
-    collapsed_sections: settings.collapsed_sections
-      ? JSON.parse(settings.collapsed_sections)
-      : [],
+    widget_order: safeParse(settings.widget_order, {}),
+    dashboard_widgets: safeParse(settings.dashboard_widgets, []),
+    collapsed_sections: safeParse(settings.collapsed_sections, []),
     include_child_bookmarks: settings.include_child_bookmarks || 0,
     current_view: settings.current_view || "all",
     snap_to_grid: settings.snap_to_grid === 1,

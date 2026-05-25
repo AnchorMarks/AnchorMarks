@@ -11,7 +11,7 @@ async function checkLink(req, res) {
   const { url } = data;
   let responded = false;
   try {
-    if (process.env.NODE_ENV === "production" && (await isPrivateAddress(url)))
+    if (await isPrivateAddress(url))
       return res.status(403).json({ error: "Private networks not allowed" });
     const parsedUrl = new URL(url);
     const protocol = parsedUrl.protocol === "https:" ? https : http;
@@ -93,10 +93,7 @@ async function checkLinks(req, res) {
         if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
           continue;
         }
-        if (
-          process.env.NODE_ENV === "production" &&
-          (await isPrivateAddress(bookmark.url))
-        ) {
+        if (await isPrivateAddress(bookmark.url)) {
           continue;
         }
         const isOk = await new Promise((resolve) => {

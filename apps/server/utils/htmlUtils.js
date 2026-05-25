@@ -156,9 +156,8 @@ function generateBookmarkHtml(bookmarks, folders) {
     if (f.parent_id && folderMap[f.parent_id]) {
       folderMap[f.parent_id].childrenFolders.push(folderMap[f.id]);
     } else {
-      // Root level folder (or orphaned if parent missing, treating as root)
-      if (!f.parent_id)
-        rootItems.push({ type: "folder", data: folderMap[f.id] });
+      // Root-level folder, or orphaned (parent missing) — treat as root
+      rootItems.push({ type: "folder", data: folderMap[f.id] });
     }
   });
 
