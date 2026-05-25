@@ -58,7 +58,7 @@ describe("Auth negative paths and extras", () => {
       .send({ email: `short_${Date.now()}@example.com`, password: "123" });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/at least 6/i);
+    expect(res.body.error).toMatch(/at least 8/i);
   });
 
   it("rejects register for existing user", async () => {

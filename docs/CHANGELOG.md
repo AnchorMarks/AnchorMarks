@@ -6,28 +6,37 @@ All notable changes to AnchorMarks are documented here.
 
 ## [Unreleased]
 
+---
+
+## [1.0.11] - 2026-05-25
+
 ### Added
 
 - **Open Graph image auto-fetch** — rich bookmark cards automatically fetch and persist `og_image` when none is stored; image fades in with a smooth load transition and the result is saved back to the bookmark so subsequent renders use the cached value
 - **Sidebar flyout menus** — folders and tags sections now show a flyout panel when the sidebar is collapsed, keeping navigation accessible without expanding the sidebar
+- **Folder bookmark counts** — the folders API now returns a `bookmark_count` field for each folder, enabling count display without extra queries
 - Added integration coverage for settings APIs, including default settings retrieval, update flows, flexible `settings_json` merge behavior, and bookmark reset behavior
 
 ### Fixed
 
 - **Backoff on rate-limited pagination** — `loadMore` now backs off for 60 seconds after receiving a rate-limit error, preventing repeated failed requests when scrolling
 - **Pagination respects active filters** — "load more" requests now forward the current folder, tag, sort, and search filters so paginated results match the visible bookmark list
-- Fixed `user_settings` insert coercion so boolean-style settings values are stored safely as SQLite-compatible integers
-- Fixed `user_settings` insert path to persist `current_view` and `snap_to_grid` on first-time settings creation
-
-### Fixed
-
 - **AI service unavailability handled gracefully** — `suggestTagsAI` now catches service errors and returns an empty suggestion list instead of propagating the exception
 - **Widget "Show in Bookmarks" filter** — fixed `showWidgetInBookmarksView` to read the current filter configuration via the bookmarks bridge rather than an outdated local copy
 - **Dashboard/commands view switching** — folder and tag widgets now switch to `all` view (showing all bookmarks) before applying the widget filter, preventing empty results when the user is on an unrelated view
+- Fixed `user_settings` insert coercion so boolean-style settings values are stored safely as SQLite-compatible integers
+- Fixed `user_settings` insert path to persist `current_view` and `snap_to_grid` on first-time settings creation
+- Improved wording and formatting in in-app help documentation
+
+### Security
+
+- Updated `qs` dependency to address a reported security advisory
 
 ### Changed
 
 - Sidebar collapsed state is now tracked reactively via a `MutationObserver` on `document.body`, keeping the React tree in sync with external toggle actions
+- Sidebar icons now have consistent padding and smooth transition effects for improved hover UX
+- Bookmarks context enhanced with view cache management to reduce redundant re-renders
 - Removed unused `onEdit` props from `DashboardGrid` and `DashboardWidget` components
 - Improved type safety and error handling across server controllers and services
 - Docker Compose configuration refactored; added tests for `GeneralSettings` and the `useSettings` hook
