@@ -19,6 +19,7 @@ import {
   renderReactDashboard,
   unmountReactDashboard,
 } from "@features/bookmarks/react-dashboard.tsx";
+import { getBookmarksBridge } from "@contexts/context-bridge";
 
 // Constants
 const GRID_SIZE = 20;
@@ -1238,7 +1239,7 @@ async function showWidgetInBookmarksView(
 
     if (widgetType === "folder") {
       state.setCurrentFolder(widgetId);
-      state.setFilterConfig({
+      getBookmarksBridge().setFilterConfig({
         ...state.filterConfig,
         folder: widgetId,
         tags: [],
@@ -1246,7 +1247,7 @@ async function showWidgetInBookmarksView(
       await state.setCurrentView("all");
     } else if (widgetType === "tag") {
       state.setCurrentFolder(null);
-      state.setFilterConfig({
+      getBookmarksBridge().setFilterConfig({
         ...state.filterConfig,
         folder: null,
         tags: [widgetId],
