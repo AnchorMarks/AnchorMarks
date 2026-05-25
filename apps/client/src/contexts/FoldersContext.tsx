@@ -297,7 +297,10 @@ export function FoldersProvider({ children }: { children: ReactNode }) {
     }, []),
     setCurrentFolder: useCallback((val) => setCurrentFolder(val), []),
     setCurrentCollection: useCallback((val) => setCurrentCollection(val), []),
-    setDraggedSidebarItem: useCallback((val) => setDraggedSidebarItem(val), []),
+    setDraggedSidebarItem: useCallback((val) => {
+      setDraggedSidebarItem(val);
+      state.setDraggedSidebarItem(val);
+    }, []),
     createFolder,
     updateFolder,
     updateFolderMetadata,

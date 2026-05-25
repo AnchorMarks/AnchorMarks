@@ -4,14 +4,31 @@ import {
   renderDashboard,
   initDashboardViews,
   restoreView,
+  saveCurrentViewUpdate,
   filterDashboardBookmarks,
   updateLayoutStats,
   autoPositionWidgets,
 } from "@features/bookmarks/dashboard.ts";
 
-const { apiMock, loadSettingsSpy, saveSettingsSpy } = vi.hoisted(() => ({
-  apiMock: vi.fn((endpoint: string) => {
+const { apiMock, loadSettingsSpy, saveSettingsSpy, promptDialogSpy } = vi.hoisted(() => ({
+  apiMock: vi.fn((endpoint: string, options?: RequestInit) => {
+    if (endpoint === "/dashboard/views" && options?.method === "POST") {
+      const payload = JSON.parse(String(options.body));
+      return Promise.resolve({
+        id: "view-created",
+        name: payload.name,
+        config: payload.config,
+      });
+    }
     if (endpoint === "/dashboard/views") return Promise.resolve([]);
+    if (String(endpoint) === "/dashboard/views/view-123" && options?.method === "PUT") {
+      const payload = JSON.parse(String(options.body));
+      return Promise.resolve({
+        id: "view-123",
+        name: "Work View",
+        config: payload.config,
+      });
+    }
     if (String(endpoint).includes("/restore"))
       return Promise.resolve({ success: true });
     if (String(endpoint).includes("/bookmarks?folder_id=legacy-folder")) {
@@ -30,6 +47,7 @@ const { apiMock, loadSettingsSpy, saveSettingsSpy } = vi.hoisted(() => ({
   }),
   loadSettingsSpy: vi.fn(() => Promise.resolve()),
   saveSettingsSpy: vi.fn(() => Promise.resolve()),
+  promptDialogSpy: vi.fn(() => Promise.resolve("Work Dashboard")),
 }));
 
 // Mock API so dropdown loads without network and so we can assert call counts
@@ -41,6 +59,11 @@ vi.mock("@services/api.ts", () => ({
 vi.mock("@features/bookmarks/settings.ts", () => ({
   loadSettings: loadSettingsSpy,
   saveSettings: saveSettingsSpy,
+}));
+
+vi.mock("@features/ui/confirm-dialog.ts", () => ({
+  confirmDialog: vi.fn(() => Promise.resolve(true)),
+  promptDialog: promptDialogSpy,
 }));
 
 // Stub bookmarks loader for filter tests
@@ -77,9 +100,12 @@ describe("Dashboard rendering and views initialization", () => {
     await state.setCurrentView("dashboard");
     state.setDashboardWidgets([]);
     state.setDashboardHasUnsavedChanges(false);
+    state.setCurrentDashboardViewId(null);
+    state.setCurrentDashboardViewName(null);
     apiMock.mockClear();
     loadSettingsSpy.mockClear();
     saveSettingsSpy.mockClear();
+    promptDialogSpy.mockClear();
   });
 
   it("renders help text when there are no widgets", async () => {
@@ -286,6 +312,55 @@ describe("Dashboard rendering and views initialization", () => {
     });
     expect(state.currentDashboardViewId).toBe("view-123");
     expect(state.currentDashboardViewName).toBe("Work View");
+  });
+
+  it("saveCurrentViewUpdate creates a named view when no current view is active", async () => {
+    state.setDashboardHasUnsavedChanges(true);
+
+    await saveCurrentViewUpdate();
+
+    expect(promptDialogSpy).toHaveBeenCalled();
+    expect(apiMock).toHaveBeenCalledWith("/dashboard/views", {
+      method: "POST",
+      body: JSON.stringify({
+        name: "Work Dashboard",
+        config: {
+          dashboard_mode: state.dashboardConfig.mode,
+          dashboard_tags: state.dashboardConfig.tags,
+          dashboard_sort: state.dashboardConfig.bookmarkSort,
+          widget_order: state.widgetOrder,
+          dashboard_widgets: state.dashboardWidgets,
+          include_child_bookmarks: 0,
+        },
+      }),
+    });
+    expect(state.currentDashboardViewId).toBe("view-created");
+    expect(state.currentDashboardViewName).toBe("Work Dashboard");
+    expect(state.dashboardHasUnsavedChanges).toBe(false);
+  });
+
+  it("saveCurrentViewUpdate updates the active named view", async () => {
+    state.setCurrentDashboardViewId("view-123");
+    state.setCurrentDashboardViewName("Work View");
+    state.setDashboardHasUnsavedChanges(true);
+
+    await saveCurrentViewUpdate();
+
+    expect(promptDialogSpy).not.toHaveBeenCalled();
+    expect(apiMock).toHaveBeenCalledWith("/dashboard/views/view-123", {
+      method: "PUT",
+      body: JSON.stringify({
+        config: {
+          dashboard_mode: state.dashboardConfig.mode,
+          dashboard_tags: state.dashboardConfig.tags,
+          dashboard_sort: state.dashboardConfig.bookmarkSort,
+          widget_order: state.widgetOrder,
+          dashboard_widgets: state.dashboardWidgets,
+          include_child_bookmarks: 0,
+        },
+      }),
+    });
+    expect(state.dashboardHasUnsavedChanges).toBe(false);
   });
 });
 

@@ -9,6 +9,7 @@ import {
 import {
   subscribe,
   setCurrentView as vanillaSetCurrentView,
+  setSnapToGrid as vanillaSetSnapToGrid,
 } from "../features/state";
 import { syncUIBridge } from "./context-bridge";
 import type { TourStep } from "../types/index";
@@ -196,6 +197,11 @@ export function UIProvider({ children }: { children: ReactNode }) {
     setCurrentFolderState(val);
   }, []);
 
+  const updateSnapToGrid = useCallback((val: boolean) => {
+    setSnapToGrid(val);
+    vanillaSetSnapToGrid(val);
+  }, []);
+
   // Sync current state into the bridge store so non-React code always reads fresh values
   useEffect(() => {
     syncUIBridge({
@@ -211,12 +217,18 @@ export function UIProvider({ children }: { children: ReactNode }) {
       setAiSuggestionsEnabled: (val) => setAiSuggestionsEnabled(val),
       setRichLinkPreviewsEnabled: (val) => setRichLinkPreviewsEnabled(val),
       setIncludeChildBookmarks: (val) => setIncludeChildBookmarks(val),
-      setSnapToGrid: (val) => setSnapToGrid(val),
+      setSnapToGrid: (val) => updateSnapToGrid(val),
       setTourCompleted: (val) => setTourCompleted(val),
       setTagCloudMaxTags: (val) => setTagCloudMaxTags(val),
       setTagCloudDefaultShowAll: (val) => setTagCloudDefaultShowAll(val),
     });
-  }, [currentView, currentFolder, includeChildBookmarks, hideSidebar]);
+  }, [
+    currentView,
+    currentFolder,
+    includeChildBookmarks,
+    hideSidebar,
+    updateSnapToGrid,
+  ]);
 
   const setViewToolbarConfig = useCallback(
     (view: string, config: Record<string, unknown>) => {
@@ -262,7 +274,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       (val) => setIncludeChildBookmarks(val),
       [],
     ),
-    setSnapToGrid: useCallback((val) => setSnapToGrid(val), []),
+    setSnapToGrid: updateSnapToGrid,
     setTourCompleted: useCallback((val) => setTourCompleted(val), []),
     setRichLinkPreviewsEnabled: useCallback(
       (val) => setRichLinkPreviewsEnabled(val),

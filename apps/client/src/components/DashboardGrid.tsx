@@ -8,6 +8,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { DashboardWidget } from "./DashboardWidget.tsx";
+import { useUI } from "../contexts/UIContext";
 import type {
   Bookmark,
   DashboardWidget as DashboardWidgetType,
@@ -53,6 +54,16 @@ interface DashboardGridProps {
   ) => void;
 }
 
+const GRID_SIZE = 20;
+
+function snapValueToGrid(value: number, enabled: boolean): number {
+  if (!enabled) {
+    return value;
+  }
+
+  return Math.round(value / GRID_SIZE) * GRID_SIZE;
+}
+
 export function DashboardGrid({
   widgets,
   isEditMode = false,
@@ -71,6 +82,7 @@ export function DashboardGrid({
   onChangeWidgetColor,
   onTagAnalyticsSettingsChange,
 }: DashboardGridProps) {
+  const { snapToGrid } = useUI();
   const CANVAS_PADDING = 40;
   const [activeWidgetId, setActiveWidgetId] = useState<string | null>(null);
 
@@ -121,8 +133,14 @@ export function DashboardGrid({
     const widget = widgets.find((w) => w.id === widgetId);
     if (!widget) return;
 
-    const x = Math.max(0, (widget.x || 0) + event.delta.x);
-    const y = Math.max(0, (widget.y || 0) + event.delta.y);
+    const x = snapValueToGrid(
+      Math.max(0, (widget.x || 0) + event.delta.x),
+      snapToGrid,
+    );
+    const y = snapValueToGrid(
+      Math.max(0, (widget.y || 0) + event.delta.y),
+      snapToGrid,
+    );
 
     onMoveWidget?.(widgetId, x, y);
 

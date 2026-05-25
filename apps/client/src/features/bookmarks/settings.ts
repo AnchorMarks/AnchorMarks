@@ -59,7 +59,7 @@ export async function loadSettings(): Promise<void> {
       ui.setAiSuggestionsEnabled(settings.ai_suggestions_enabled !== false);
       ui.setRichLinkPreviewsEnabled(!!settings.rich_link_previews_enabled);
       ui.setIncludeChildBookmarks(settings.include_child_bookmarks === 1);
-      ui.setSnapToGrid(settings.snap_to_grid !== false);
+      ui.setSnapToGrid(settings.snap_to_grid !== 0);
       ui.setTourCompleted(settings.tour_completed || false);
       if (typeof settings.tag_cloud_max_tags === "number") {
         ui.setTagCloudMaxTags(settings.tag_cloud_max_tags);
@@ -78,7 +78,7 @@ export async function loadSettings(): Promise<void> {
       state.setAiSuggestionsEnabled(settings.ai_suggestions_enabled !== false);
       state.setRichLinkPreviewsEnabled(!!settings.rich_link_previews_enabled);
       state.setIncludeChildBookmarks(settings.include_child_bookmarks === 1);
-      state.setSnapToGrid(settings.snap_to_grid !== false);
+      state.setSnapToGrid(settings.snap_to_grid !== 0);
       state.setTourCompleted(settings.tour_completed || false);
       if (settings.current_view) {
         state.setCurrentView(settings.current_view);

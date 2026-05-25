@@ -3,6 +3,44 @@ import { renderWithProviders, screen, fireEvent } from "../test-utils";
 import { DashboardGrid } from "./DashboardGrid.tsx";
 import type { DashboardWidget, Bookmark } from "../types/index";
 
+const dndMocks = vi.hoisted(() => ({
+  onDragEnd: null as ((event: {
+    active: { id: string };
+    delta: { x: number; y: number };
+  }) => void) | null,
+  setNodeRef: vi.fn(),
+}));
+
+vi.mock("@dnd-kit/core", async () => {
+  const actual =
+    await vi.importActual<typeof import("@dnd-kit/core")>("@dnd-kit/core");
+
+  return {
+    ...actual,
+    DndContext: ({
+      children,
+      onDragEnd,
+    }: {
+      children: React.ReactNode;
+      onDragEnd?: (event: {
+        active: { id: string };
+        delta: { x: number; y: number };
+      }) => void;
+    }) => {
+      dndMocks.onDragEnd = onDragEnd ?? null;
+      return children;
+    },
+    useSensor: vi.fn(() => ({})),
+    useSensors: vi.fn(() => ([])),
+    useDraggable: vi.fn(() => ({
+      attributes: {},
+      listeners: {},
+      setNodeRef: dndMocks.setNodeRef,
+      transform: null,
+    })),
+  };
+});
+
 const widgets: DashboardWidget[] = [
   {
     id: "w-1",
@@ -119,5 +157,24 @@ describe("DashboardGrid", () => {
     expect(canvas).toBeTruthy();
     expect(canvas?.style.height).toBe("1540px");
     expect(canvas?.style.width).toBe("620px");
+  });
+
+  it("snaps dropped widgets to the dashboard grid", () => {
+    const onMoveWidget = vi.fn();
+
+    renderWithProviders(
+      <DashboardGrid
+        widgets={widgets}
+        isEditMode={true}
+        onMoveWidget={onMoveWidget}
+      />,
+    );
+
+    dndMocks.onDragEnd?.({
+      active: { id: "w-2" },
+      delta: { x: 17, y: 27 },
+    });
+
+    expect(onMoveWidget).toHaveBeenCalledWith("w-2", 340, 20);
   });
 });

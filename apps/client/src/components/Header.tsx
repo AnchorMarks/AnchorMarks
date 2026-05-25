@@ -93,9 +93,9 @@ export function Header() {
   }, []);
 
   const handleSaveDashboard = useCallback(async () => {
-    const { saveDashboardStateSnapshot } =
+    const { saveCurrentViewUpdate } =
       await import("@features/bookmarks/dashboard.ts");
-    saveDashboardStateSnapshot?.();
+    await saveCurrentViewUpdate?.();
   }, []);
 
   // Bookmark views are rendered by the React component; no legacy init required.

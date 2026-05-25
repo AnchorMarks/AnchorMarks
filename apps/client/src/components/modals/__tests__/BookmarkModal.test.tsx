@@ -60,11 +60,14 @@ describe("BookmarkModal (React)", () => {
 
   it("renders folder options from context", () => {
     renderBookmarkModal();
-    const folderSelect = screen.getByLabelText(/Folder/) as HTMLSelectElement;
-    const options = within(folderSelect).getAllByRole("option");
+    const folderInput = screen.getByLabelText(/Folder/) as HTMLInputElement;
+
+    fireEvent.focus(folderInput);
+
+    const options = document.querySelectorAll(".folder-dropdown-option");
     expect(options).toHaveLength(3); // None + 2 folders
-    expect(options[1].textContent).toBe("Folder 1");
-    expect(options[2].textContent).toBe("Folder 2");
+    expect(options[1]?.textContent).toBe("Folder 1");
+    expect(options[2]?.textContent).toBe("Folder 2");
   });
 
   it("renders color picker with all colors", () => {

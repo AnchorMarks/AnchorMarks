@@ -5,6 +5,7 @@ import { PreviewWidgetContent } from "./PreviewWidgetContent.tsx";
 import { StaticWidgetContent } from "./StaticWidgetContent.tsx";
 import { WidgetColorPicker } from "./WidgetColorPicker.tsx";
 import { TagAnalyticsWidget } from "./TagAnalyticsWidget.tsx";
+import { useUI } from "../contexts/UIContext";
 import type {
   Bookmark,
   DashboardWidget as DashboardWidgetType,
@@ -49,6 +50,16 @@ interface DashboardWidgetProps {
       };
     },
   ) => void;
+}
+
+const GRID_SIZE = 20;
+
+function snapValueToGrid(value: number, enabled: boolean): number {
+  if (!enabled) {
+    return value;
+  }
+
+  return Math.round(value / GRID_SIZE) * GRID_SIZE;
 }
 
 function renderWidgetBody(
@@ -115,6 +126,7 @@ export function DashboardWidget({
 }: DashboardWidgetProps) {
   const MIN_WIDGET_WIDTH = 200;
   const MIN_WIDGET_HEIGHT = 150;
+  const { snapToGrid } = useUI();
 
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
@@ -183,8 +195,14 @@ export function DashboardWidget({
       const dx = moveEvent.clientX - startX;
       const dy = moveEvent.clientY - startY;
 
-      nextWidth = Math.max(MIN_WIDGET_WIDTH, startWidth + dx);
-      nextHeight = Math.max(MIN_WIDGET_HEIGHT, startHeight + dy);
+      nextWidth = snapValueToGrid(
+        Math.max(MIN_WIDGET_WIDTH, startWidth + dx),
+        snapToGrid,
+      );
+      nextHeight = snapValueToGrid(
+        Math.max(MIN_WIDGET_HEIGHT, startHeight + dy),
+        snapToGrid,
+      );
       setLiveSize({ width: nextWidth, height: nextHeight });
     };
 

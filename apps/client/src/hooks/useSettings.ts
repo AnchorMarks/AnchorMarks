@@ -52,7 +52,7 @@ export function useSettings() {
       setAiSuggestionsEnabled(settings.ai_suggestions_enabled !== false);
       setRichLinkPreviewsEnabled(!!settings.rich_link_previews_enabled);
       setIncludeChildBookmarks(settings.include_child_bookmarks === 1);
-      setSnapToGrid(settings.snap_to_grid !== false);
+      setSnapToGrid(settings.snap_to_grid !== 0);
       setTourCompleted(settings.tour_completed || false);
 
       if (typeof settings.tag_cloud_max_tags === "number") {

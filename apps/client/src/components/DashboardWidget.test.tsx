@@ -101,4 +101,31 @@ describe("DashboardWidget", () => {
     expect(onEdit).toHaveBeenCalledWith("widget-1");
     expect(onRemove).toHaveBeenCalledWith("widget-1");
   });
+
+  it("snaps resize operations to the dashboard grid", () => {
+    const onResizeWidget = vi.fn();
+
+    renderWithProviders(
+      <DashboardWidget
+        widget={baseWidget}
+        widgetIndex={0}
+        isEditing={true}
+        linkedWidgetId="widget-1"
+        onResizeWidget={onResizeWidget}
+        metrics={{ Bookmarks: 10 }}
+      />,
+    );
+
+    const resizeHandle = document.querySelector(
+      ".widget-resize-handle",
+    ) as HTMLDivElement | null;
+
+    expect(resizeHandle).toBeTruthy();
+
+    fireEvent.mouseDown(resizeHandle!, { clientX: 100, clientY: 100 });
+    fireEvent.mouseMove(document, { clientX: 117, clientY: 133 });
+    fireEvent.mouseUp(document);
+
+    expect(onResizeWidget).toHaveBeenCalledWith("widget-1", 380, 320);
+  });
 });

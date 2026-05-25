@@ -66,6 +66,7 @@ vi.mock("@features/bookmarks/bookmarks.ts", () => ({
   unarchiveBookmark: vi.fn(),
   toggleFavorite: vi.fn(),
   editBookmark: vi.fn(),
+  fetchMetadata: vi.fn().mockResolvedValue({}),
 }));
 
 vi.mock("@services/api.ts", () => ({

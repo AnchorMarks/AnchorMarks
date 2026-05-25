@@ -428,6 +428,11 @@ export function setDashboardWidgets(val: DashboardWidget[]) {
   dashboardWidgets = val;
   emit("dashboardWidgets", val);
 }
+// Sync without emitting — used by React components to avoid re-triggering their own
+// useEffect deps that subscribe to the "dashboardWidgets" event.
+export function setDashboardWidgetsSilent(val: DashboardWidget[]) {
+  dashboardWidgets = val;
+}
 export function setCollapsedSections(val: string[]) {
   collapsedSections = val;
   emit("collapsedSections", val);

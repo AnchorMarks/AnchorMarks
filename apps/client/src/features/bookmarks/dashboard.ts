@@ -107,6 +107,44 @@ export function saveDashboardStateSnapshot(): void {
   updateUnsavedIndicator();
 }
 
+function getCurrentDashboardViewConfig() {
+  return {
+    dashboard_mode: state.dashboardConfig.mode,
+    dashboard_tags: state.dashboardConfig.tags,
+    dashboard_sort: state.dashboardConfig.bookmarkSort,
+    widget_order: state.widgetOrder,
+    dashboard_widgets: state.dashboardWidgets,
+    include_child_bookmarks: state.includeChildBookmarks ? 1 : 0,
+  };
+}
+
+/**
+ * Persist the current dashboard state (widgets, config) to the active named view
+ * if one is loaded. Called from the toolbar "Save" button so that widget colors
+ * and layout changes are written back to the view that was restored.
+ */
+export async function saveCurrentViewUpdate(): Promise<void> {
+  if (!state.currentDashboardViewId) {
+    await saveCurrentView();
+    return;
+  }
+
+  try {
+    await api(`/dashboard/views/${state.currentDashboardViewId}`, {
+      method: "PUT",
+      body: JSON.stringify({ config: getCurrentDashboardViewConfig() }),
+    });
+
+    saveDashboardStateSnapshot();
+    showToast(
+      `View "${escapeHtml(state.currentDashboardViewName || "Dashboard")}" saved!`,
+      "success",
+    );
+  } catch (err: unknown) {
+    showToast((err as Error).message, "error");
+  }
+}
+
 /**
  * Check if dashboard has unsaved changes
  */
@@ -428,21 +466,17 @@ export async function saveCurrentView(): Promise<void> {
   if (!name) return;
 
   try {
-    const config = {
-      dashboard_mode: state.dashboardConfig.mode,
-      dashboard_tags: state.dashboardConfig.tags,
-      dashboard_sort: state.dashboardConfig.bookmarkSort,
-      widget_order: state.widgetOrder,
-      dashboard_widgets: state.dashboardWidgets,
-      include_child_bookmarks: state.includeChildBookmarks ? 1 : 0,
-    };
-
-    await api("/dashboard/views", {
+    const view = await api<DashboardViewResponse>("/dashboard/views", {
       method: "POST",
-      body: JSON.stringify({ name, config }),
+      body: JSON.stringify({ name, config: getCurrentDashboardViewConfig() }),
     });
 
-    showToast(`View "${escapeHtml(name)}" saved!`, "success");
+    state.setCurrentDashboardViewId(view.id);
+    state.setCurrentDashboardViewName(view.name);
+    updateViewNameBadge(view.name);
+    saveDashboardStateSnapshot();
+
+    showToast(`View "${escapeHtml(view.name)}" saved!`, "success");
     closeViewsDropdown();
     await loadViews();
   } catch (err: unknown) {
@@ -567,6 +601,20 @@ export async function renderDashboard(): Promise<void> {
   outlet.className = "dashboard-freeform";
 
   const widgets = state.dashboardWidgets || [];
+
+  // Backfill titles for widgets saved before the title field existed
+  widgets.forEach((widget) => {
+    if (widget.title) return;
+    const linkedId = getWidgetLinkedId(widget);
+    if (widget.type === "folder") {
+      const folder = state.folders.find((f) => f.id === linkedId);
+      if (folder) widget.title = folder.name;
+    } else if (widget.type === "tag") {
+      if (linkedId) widget.title = linkedId;
+    } else if (widget.type === "tag-analytics") {
+      widget.title = "Tag Analytics";
+    }
+  });
 
   const previewBookmarksByWidgetId: Record<string, Bookmark[]> = {};
   const metricsByWidgetId: Record<string, Record<string, number>> = {};
@@ -1209,7 +1257,12 @@ async function showWidgetInBookmarksView(
  */
 function updateWidgetColor(index: number, color: string): void {
   if (state.dashboardWidgets[index]) {
-    state.dashboardWidgets[index].color = color;
+    const nextWidgets = [...state.dashboardWidgets];
+    nextWidgets[index] = { ...nextWidgets[index], color };
+    state.setDashboardWidgets(nextWidgets);
+    import("@features/bookmarks/settings.ts").then(({ saveSettings }) =>
+      saveSettings({ dashboard_widgets: nextWidgets }),
+    );
     markDashboardModified();
     renderDashboard();
     showToast("Widget color updated", "success");
@@ -1222,10 +1275,15 @@ function updateWidgetColor(index: number, color: string): void {
 function updateWidgetPosition(widgetId: string, x: number, y: number): void {
   const index = state.dashboardWidgets.findIndex((w) => w.id === widgetId);
   if (index >= 0 && state.dashboardWidgets[index]) {
-    state.dashboardWidgets[index].x = snapToGrid(x);
-    state.dashboardWidgets[index].y = snapToGrid(y);
+    const nextWidgets = [...state.dashboardWidgets];
+    const widget = { ...nextWidgets[index] };
+    widget.x = snapToGrid(x);
+    widget.y = snapToGrid(y);
+    nextWidgets[index] = widget;
+
+    state.setDashboardWidgets(nextWidgets);
     markDashboardModified();
-    // No need to re-render since the position is already updated by React
+    void renderDashboard();
   }
 }
 
@@ -1241,10 +1299,16 @@ function updateWidgetSize(
   if (index >= 0 && state.dashboardWidgets[index]) {
     const minWidth = 200;
     const minHeight = 150;
-    state.dashboardWidgets[index].w = snapToGrid(Math.max(minWidth, width));
-    state.dashboardWidgets[index].h = snapToGrid(Math.max(minHeight, height));
+    const nextWidgets = [...state.dashboardWidgets];
+    const widget = { ...nextWidgets[index] };
+    widget.w = snapToGrid(Math.max(minWidth, width));
+    widget.h = snapToGrid(Math.max(minHeight, height));
+    nextWidgets[index] = widget;
+
+    state.setDashboardWidgets(nextWidgets);
     markDashboardModified();
     updateLayoutStats();
+    void renderDashboard();
   }
 }
 
@@ -1279,7 +1343,8 @@ export function addDashboardWidget(
     title,
   };
 
-  state.dashboardWidgets.push(widget);
+  const nextWidgets = [...state.dashboardWidgets, widget];
+  state.setDashboardWidgets(nextWidgets);
   markDashboardModified();
   renderDashboard();
 }
@@ -1289,7 +1354,8 @@ export function addDashboardWidget(
  */
 export function removeDashboardWidget(index: number): void {
   if (index >= 0 && index < state.dashboardWidgets.length) {
-    state.dashboardWidgets.splice(index, 1);
+    const nextWidgets = state.dashboardWidgets.filter((_, i) => i !== index);
+    state.setDashboardWidgets(nextWidgets);
     markDashboardModified();
     renderDashboard();
   }
@@ -1455,7 +1521,11 @@ function attachLayoutSettingsListeners(): void {
     .getElementById("snap-to-grid-toggle-btn")
     ?.addEventListener("click", (e) => {
       e.stopPropagation();
-      state.setSnapToGrid(!state.snapToGrid);
+      const newVal = !state.snapToGrid;
+      state.setSnapToGrid(newVal);
+      import("@features/bookmarks/settings.ts").then(({ saveSettings }) =>
+        saveSettings({ snap_to_grid: newVal ? 1 : 0 }),
+      );
       showLayoutSettings();
     });
 }
