@@ -38,6 +38,22 @@ const httpUrl = z
     { message: "URL must use http or https" },
   );
 
+const bookmarkUrl = z
+  .string()
+  .min(1, "URL is required")
+  .max(MAX_URL_LENGTH, `URL must be less than ${MAX_URL_LENGTH} characters`)
+  .refine(
+    (s) => {
+      try {
+        const u = new URL(s);
+        return ["http:", "https:", "bookmark-view:"].includes(u.protocol);
+      } catch {
+        return false;
+      }
+    },
+    { message: "URL must use http, https, or bookmark-view" },
+  );
+
 // Optional URL — blank/undefined is allowed, but if provided must be http/https
 const optionalHttpUrl = z
   .string()
@@ -103,7 +119,7 @@ const authPassword = z
 // ---- Bookmarks ----
 const bookmarkCreate = z
   .object({
-    url: httpUrl,
+    url: bookmarkUrl,
     title: optionalString,
     description: optionalString,
     folder_id: uuidLike,
