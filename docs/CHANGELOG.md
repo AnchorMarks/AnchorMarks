@@ -6,6 +6,10 @@ All notable changes to AnchorMarks are documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Plain-HTTP deployments no longer forced to HTTPS** — the CSP header no longer includes `upgrade-insecure-requests` when `SSL_ENABLED` is false, so browsers stop rewriting every `http://` subresource request to `https://` (breaking API calls and assets on non-TLS installs)
+
 ---
 
 ## [1.0.11] - 2026-05-25

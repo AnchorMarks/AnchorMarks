@@ -145,6 +145,11 @@ const cspDirectives = {
   objectSrc: ["'none'"],
   baseUri: ["'self'"],
   formAction: ["'self'"],
+  // helmet enables "upgrade-insecure-requests" by default, which forces the
+  // browser to rewrite every http:// subresource request to https://. Only
+  // send it when the server actually speaks TLS; otherwise API calls and
+  // assets break on plain-HTTP deployments.
+  "upgrade-insecure-requests": config.SSL_ENABLED ? [] : null,
   // Edge's lazy-load placeholder intervention can inject handlers. Our code uses addEventListener.
   // When CSP_DIAGNOSTIC=true, use 'none' to trigger violations and report them for debugging.
   scriptSrcAttr: CSP_DIAGNOSTIC ? ["'none'"] : ["'unsafe-inline'"],
