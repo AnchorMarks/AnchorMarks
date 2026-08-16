@@ -1,6 +1,9 @@
 const https = require("https");
 const http = require("http");
-const { isPrivateAddress } = require("../utils/ssrfUtils");
+const {
+  isPrivateAddress,
+  resolveToPublicIp,
+} = require("../utils/ssrfUtils");
 
 function getStats(db, userId) {
   const bookmarkCount = db
@@ -221,8 +224,8 @@ async function runDeadlinkChecks(db, userId, limit = 50) {
       const urlObj = new URL(bookmark.url);
       if (!["http:", "https:"].includes(urlObj.protocol)) {
         db.prepare(
-          "UPDATE bookmarks SET last_checked = CURRENT_TIMESTAMP WHERE id = ?",
-        ).run(bookmark.id);
+          "UPDATE bookmarks SET last_checked = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?",
+        ).run(bookmark.id, userId);
         results.push({
           id: bookmark.id,
           url: bookmark.url,
@@ -236,8 +239,8 @@ async function runDeadlinkChecks(db, userId, limit = 50) {
         (await isPrivateAddress(bookmark.url))
       ) {
         db.prepare(
-          "UPDATE bookmarks SET last_checked = CURRENT_TIMESTAMP WHERE id = ?",
-        ).run(bookmark.id);
+          "UPDATE bookmarks SET last_checked = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?",
+        ).run(bookmark.id, userId);
         results.push({
           id: bookmark.id,
           url: bookmark.url,
@@ -247,11 +250,27 @@ async function runDeadlinkChecks(db, userId, limit = 50) {
         continue;
       }
       const protocol = urlObj.protocol === "https:" ? https : http;
+      let requestOptions = {
+        method: "HEAD",
+        timeout: 5000,
+      };
+      if (process.env.NODE_ENV === "production") {
+        const publicIp = await resolveToPublicIp(urlObj.hostname);
+        requestOptions = {
+          ...requestOptions,
+          hostname: publicIp,
+          port: urlObj.port || undefined,
+          path: `${urlObj.pathname}${urlObj.search}`,
+          headers: { Host: urlObj.host },
+          ...(urlObj.protocol === "https:" ? { servername: urlObj.hostname } : {}),
+        };
+      } else {
+        requestOptions = bookmark.url;
+      }
 
       const isDead = await new Promise((resolve) => {
         const req = protocol.request(
-          bookmark.url,
-          { method: "HEAD", timeout: 5000 },
+          requestOptions,
           (response) => {
             resolve(response.statusCode >= 400);
           },
@@ -265,8 +284,8 @@ async function runDeadlinkChecks(db, userId, limit = 50) {
       });
 
       db.prepare(
-        "UPDATE bookmarks SET is_dead = ?, last_checked = CURRENT_TIMESTAMP WHERE id = ?",
-      ).run(isDead ? 1 : 0, bookmark.id);
+        "UPDATE bookmarks SET is_dead = ?, last_checked = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?",
+      ).run(isDead ? 1 : 0, bookmark.id, userId);
 
       if (isDead)
         results.push({
@@ -276,8 +295,8 @@ async function runDeadlinkChecks(db, userId, limit = 50) {
         });
     } catch (e) {
       db.prepare(
-        "UPDATE bookmarks SET is_dead = 1, last_checked = CURRENT_TIMESTAMP WHERE id = ?",
-      ).run(bookmark.id);
+        "UPDATE bookmarks SET is_dead = 1, last_checked = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?",
+      ).run(bookmark.id, userId);
       results.push({
         id: bookmark.id,
         url: bookmark.url,

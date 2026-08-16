@@ -67,13 +67,14 @@ function updateBookmarkTags(db, bookmarkId, tagIds, options = {}) {
   const colorOverridesByTagId = options.colorOverridesByTagId || {};
   const userId = options.userId;
 
-  // If userId is provided, verify ownership before modifying
-  if (userId) {
-    const owner = db
-      .prepare("SELECT id FROM bookmarks WHERE id = ? AND user_id = ?")
-      .get(bookmarkId, userId);
-    if (!owner) return; // Silently skip — bookmark doesn't belong to this user
+  if (userId === undefined || userId === null) {
+    throw new Error("updateBookmarkTags requires userId for tenant isolation");
   }
+
+  const owner = db
+    .prepare("SELECT id FROM bookmarks WHERE id = ? AND user_id = ?")
+    .get(bookmarkId, userId);
+  if (!owner) return; // Silently skip — bookmark doesn't belong to this user
 
   // Delete existing relationships
   db.prepare("DELETE FROM bookmark_tags WHERE bookmark_id = ?").run(bookmarkId);

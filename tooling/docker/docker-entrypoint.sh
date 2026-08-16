@@ -7,10 +7,8 @@ echo "Using pre-built frontend from image"
 # Ensure database directory exists (already owned by node via Dockerfile chown)
 mkdir -p /apps/database
 
-# Ensure server dependencies are present (host volume may not include node_modules)
-echo "Installing server dependencies (production)..."
-cd /apps/server
-npm install --omit=dev --no-audit --no-fund --no-package-lock
+# Dependencies are installed and audited during the image build.
+echo "Using production dependencies from image"
 
 # Start the server
 echo "Starting server..."

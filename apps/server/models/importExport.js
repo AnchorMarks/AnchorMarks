@@ -137,7 +137,7 @@ function importJson(db, userId, { bookmarks = [], folders = [] } = {}) {
     if (normalizedTags) {
       const tagHelpers = require("../services/tagService");
       const tagIds = tagHelpers.ensureTagsExist(db, userId, normalizedTags);
-      tagHelpers.updateBookmarkTags(db, id, tagIds);
+      tagHelpers.updateBookmarkTags(db, id, tagIds, { userId });
     }
 
     imported.push({ id, url: bm.url, title: bm.title, tags: normalizedTags });

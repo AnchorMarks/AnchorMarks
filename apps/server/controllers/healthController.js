@@ -29,6 +29,11 @@ async function checkDeadlinks(req, res) {
     const q = req.validatedQuery || req.query;
     const { check } = q;
     const limit = q.limit ?? 50;
+    if (req.method === "GET" && check === "true") {
+      return res.status(405).json({
+        error: "Deadlink checks require POST with CSRF protection",
+      });
+    }
     if (check !== "true") {
       const info = statsModel.getDeadlinksInfo(db, req.user.id, limit);
       return res.json({

@@ -123,7 +123,7 @@ async function resetBookmarks(req, res) {
           .filter(Boolean);
         if (tagNames.length > 0) {
           const tagIds = ensureTagsExist(db, userId, tagNames);
-          updateBookmarkTags(db, id, tagIds);
+          updateBookmarkTags(db, id, tagIds, { userId });
         }
       }
       if (fetchFaviconWrapper)

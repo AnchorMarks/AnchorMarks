@@ -78,7 +78,7 @@ function createExampleBookmarks(db, userId, folderId = null, fetchFavicon) {
     );
     if (bm.tags) {
       const tagIds = ensureTagsExist(db, userId, bm.tags);
-      updateBookmarkTags(db, id, tagIds);
+      updateBookmarkTags(db, id, tagIds, { userId });
     }
     if (fetchFavicon && process.env.NODE_ENV === "production") {
       fetchFavicon(bm.url, id, userId).catch((e) =>

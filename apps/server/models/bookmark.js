@@ -22,6 +22,14 @@ function _baseSelect() {
     WHERE b.user_id = ?`;
 }
 
+function assertFolderOwnership(db, userId, folderId) {
+  if (folderId == null) return;
+  const folder = db
+    .prepare("SELECT id FROM folders WHERE id = ? AND user_id = ?")
+    .get(folderId, userId);
+  if (!folder) throw new Error("Folder does not belong to user");
+}
+
 function listBookmarks(db, userId, opts = {}) {
   const {
     folder_id,
@@ -425,6 +433,8 @@ function createBookmark(db, userIdOrData, maybeData) {
   const color = data.color || null;
   const og_image = data.og_image || null;
 
+  assertFolderOwnership(db, userId, folder_id);
+
   db.prepare(
     "INSERT INTO bookmarks (id, user_id, folder_id, title, url, description, favicon, position, content_type, color, og_image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
   ).run(
@@ -459,6 +469,7 @@ function updateBookmark(db, userId, id, fields = {}) {
     is_archived,
     og_image,
   } = fields;
+  assertFolderOwnership(db, userId, folder_id);
   db.prepare(
     `
     UPDATE bookmarks SET 
@@ -501,10 +512,11 @@ function updateBookmark(db, userId, id, fields = {}) {
         result.tagMap,
       );
       tagHelpers.updateBookmarkTags(db, id, result.tagIds, {
+        userId,
         colorOverridesByTagId: overrides,
       });
     } else {
-      tagHelpers.updateBookmarkTags(db, id, []);
+      tagHelpers.updateBookmarkTags(db, id, [], { userId });
     }
   }
 
@@ -602,6 +614,7 @@ module.exports = {
   listViewTags,
   listViewFolderIds,
   getBookmarkById,
+  assertFolderOwnership,
   createBookmark,
   updateBookmark,
   deleteBookmark,

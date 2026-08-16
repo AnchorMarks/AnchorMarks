@@ -17,6 +17,8 @@ const clients = new Map();
 
 // Heartbeat interval (30s)
 const HEARTBEAT_INTERVAL_MS = 30000;
+const MAX_CONNECTIONS = 500;
+const MAX_CONNECTIONS_PER_USER = 10;
 
 let wss = null;
 let heartbeatTimer = null;
@@ -42,8 +44,23 @@ function parseCookies(cookieHeader) {
  * Attach a WebSocket server to an existing HTTP server.
  * Clients connect to ws(s)://<host>/ws — auth is via the httpOnly JWT cookie.
  */
-function initWebSocket(server) {
-  wss = new WebSocketServer({ noServer: true });
+function isAllowedOrigin(origin) {
+  if (config.NODE_ENV !== "production") return true;
+  if (!origin) return false;
+  const allowed = config.resolveCorsOrigin();
+  return (
+    Array.isArray(allowed) &&
+    allowed.some((value) => value.replace(/\/$/, "") === origin)
+  );
+}
+
+function rejectUpgrade(socket, status, message) {
+  socket.write(`HTTP/1.1 ${status} ${message}\r\n\r\n`);
+  socket.destroy();
+}
+
+function initWebSocket(server, db) {
+  wss = new WebSocketServer({ noServer: true, maxPayload: 64 * 1024 });
 
   // Handle HTTP upgrade requests for the /ws path
   server.on("upgrade", (request, socket, head) => {
@@ -54,22 +71,37 @@ function initWebSocket(server) {
       return;
     }
 
+    if (!isAllowedOrigin(request.headers.origin)) {
+      rejectUpgrade(socket, 403, "Forbidden");
+      return;
+    }
+
+    if (wss.clients.size >= MAX_CONNECTIONS) {
+      rejectUpgrade(socket, 503, "Service Unavailable");
+      return;
+    }
+
     // Authenticate via the httpOnly JWT cookie
     const cookies = parseCookies(request.headers.cookie);
-    const token = cookies.token;
+    const token = cookies[`${config.COOKIE_PREFIX}token`];
 
     if (!token) {
-      socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
-      socket.destroy();
+      rejectUpgrade(socket, 401, "Unauthorized");
       return;
     }
 
     try {
       const decoded = jwt.verify(token, config.JWT_SECRET);
       request._wsUserId = decoded.userId || decoded.id;
+      request._wsToken = token;
     } catch {
-      socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
-      socket.destroy();
+      rejectUpgrade(socket, 401, "Unauthorized");
+      return;
+    }
+
+    const userClients = clients.get(request._wsUserId);
+    if (userClients && userClients.size >= MAX_CONNECTIONS_PER_USER) {
+      rejectUpgrade(socket, 429, "Too Many Requests");
       return;
     }
 
@@ -90,6 +122,8 @@ function initWebSocket(server) {
       clients.set(userId, new Set());
     }
     clients.get(userId).add(ws);
+    ws._wsUserId = userId;
+    ws._wsToken = request._wsToken;
 
     // Mark alive for heartbeat
     ws.isAlive = true;
@@ -117,9 +151,20 @@ function initWebSocket(server) {
 
   // Heartbeat: ping every 30s, terminate unresponsive connections
   heartbeatTimer = setInterval(() => {
-    if (!wss) return;
-    wss.clients.forEach((ws) => {
-      if (ws.isAlive === false) {
+      if (!wss) return;
+      wss.clients.forEach((ws) => {
+        try {
+          jwt.verify(ws._wsToken, config.JWT_SECRET);
+          if (db) {
+            const user = db
+              .prepare("SELECT enabled FROM users WHERE id = ?")
+              .get(ws._wsUserId);
+            if (!user || user.enabled !== 1) return ws.terminate();
+          }
+        } catch {
+          return ws.terminate();
+        }
+        if (ws.isAlive === false) {
         return ws.terminate();
       }
       ws.isAlive = false;

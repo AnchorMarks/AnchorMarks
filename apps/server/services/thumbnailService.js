@@ -123,7 +123,9 @@ async function captureScreenshot(url, bookmarkId) {
 
     // Block unnecessary resources for faster loading
     await page.setRequestInterception(true);
-    page.on("request", (request) => {
+    page.on("request", async (request) => {
+      if (request.isInterceptResolutionHandled()) return;
+
       const resourceType = request.resourceType();
       const blockedTypes = ["media", "font"];
       const reqUrl = request.url();
@@ -140,7 +142,12 @@ async function captureScreenshot(url, bookmarkId) {
         "adservice",
       ];
 
-      if (blockedTypes.includes(resourceType)) {
+      if (
+        process.env.NODE_ENV === "production" &&
+        (await isPrivateAddress(reqUrl))
+      ) {
+        request.abort();
+      } else if (blockedTypes.includes(resourceType)) {
         request.abort();
       } else if (blockedPatterns.some((pattern) => reqUrl.includes(pattern))) {
         request.abort();

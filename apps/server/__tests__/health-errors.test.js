@@ -94,7 +94,7 @@ describe("Health API Errors", () => {
 
   it("handles errors in deadlink checks", async () => {
     const res = await agent
-      .get("/api/health/deadlinks?check=true")
+      .post("/api/health/deadlinks?check=true")
       .set("X-CSRF-Token", csrfToken);
     expect(res.status).toBe(500);
     expect(res.body.error).toMatch(/failed|error/i);

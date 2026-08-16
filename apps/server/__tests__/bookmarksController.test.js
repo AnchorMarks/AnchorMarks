@@ -67,6 +67,57 @@ describe("Bookmarks Controller", () => {
     expect(res.body.title).toBe("Updated Title");
   });
 
+  it("does not allow another user to modify bookmark tags", async () => {
+    const otherAgent = request.agent(app);
+    const register = await otherAgent
+      .post("/api/auth/register")
+      .send({
+        email: `other-bmtest${Date.now()}@example.com`,
+        password: "password123",
+      });
+    expect(register.status).toBe(200);
+
+    const res = await otherAgent
+      .put(`/api/bookmarks/${bookmarkId}`)
+      .set("X-CSRF-Token", register.body.csrfToken)
+      .send({ tags: "attacker-controlled" });
+    expect(res.status).toBe(404);
+
+    const list = await agent.get("/api/bookmarks");
+    const bookmark = list.body.find((item) => item.id === bookmarkId);
+    expect(bookmark.tags).toContain("test");
+    expect(bookmark.tags).not.toContain("attacker-controlled");
+  });
+
+  it("does not allow assigning another user's folder", async () => {
+    const otherAgent = request.agent(app);
+    const register = await otherAgent
+      .post("/api/auth/register")
+      .send({
+        email: `other-folder-test${Date.now()}@example.com`,
+        password: "password123",
+      });
+    expect(register.status).toBe(200);
+
+    const folder = await otherAgent
+      .post("/api/folders")
+      .set("X-CSRF-Token", register.body.csrfToken)
+      .send({ name: "Private folder", color: "#6366f1" });
+    expect(folder.status).toBe(200);
+
+    const create = await agent
+      .post("/api/bookmarks")
+      .set("X-CSRF-Token", csrfToken)
+      .send({ url: "https://example.org/foreign-folder", folder_id: folder.body.id });
+    expect(create.status).toBe(400);
+
+    const update = await agent
+      .put(`/api/bookmarks/${bookmarkId}`)
+      .set("X-CSRF-Token", csrfToken)
+      .send({ folder_id: folder.body.id });
+    expect(update.status).toBe(400);
+  });
+
   it("deletes a bookmark", async () => {
     const res = await agent
       .delete(`/api/bookmarks/${bookmarkId}`)

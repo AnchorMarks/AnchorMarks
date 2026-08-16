@@ -25,6 +25,16 @@ function parseTagsDetailed(raw) {
   }
 }
 
+function hasOwnedFolder(db, userId, folderId) {
+  if (folderId == null) return true;
+  try {
+    bookmarkModel.assertFolderOwnership(db, userId, folderId);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function listBookmarks(req, res) {
   const db = req.app.get("db");
   const {
@@ -199,6 +209,9 @@ async function createBookmark(req, res) {
   let { title, url, description, folder_id, tags, color, og_image } = raw;
   const id = uuidv4();
   try {
+    if (!hasOwnedFolder(db, req.user.id, folder_id)) {
+      return res.status(400).json({ error: "Invalid folder" });
+    }
     if (!title || !description || !og_image) {
       try {
         const metadata = await fetchUrlMetadata(url);
@@ -242,6 +255,7 @@ async function createBookmark(req, res) {
         tagResult.tagMap,
       );
       updateBookmarkTags(db, id, tagResult.tagIds, {
+        userId: req.user.id,
         colorOverridesByTagId: overrides,
       });
     }
@@ -261,6 +275,12 @@ function updateBookmark(req, res) {
   const db = req.app.get("db");
   try {
     const fields = req.validated;
+    if (
+      fields.folder_id !== undefined &&
+      !hasOwnedFolder(db, req.user.id, fields.folder_id)
+    ) {
+      return res.status(400).json({ error: "Invalid folder" });
+    }
     bookmarkModel.updateBookmark(db, req.user.id, req.params.id, fields);
     if (fields.tags !== undefined) {
       if (fields.tags && fields.tags.trim && fields.tags.trim()) {
@@ -272,10 +292,11 @@ function updateBookmark(req, res) {
           tagResult.tagMap,
         );
         updateBookmarkTags(db, req.params.id, tagResult.tagIds, {
+          userId: req.user.id,
           colorOverridesByTagId: overrides,
         });
       } else {
-        updateBookmarkTags(db, req.params.id, []);
+        updateBookmarkTags(db, req.params.id, [], { userId: req.user.id });
       }
       broadcast(req.user.id, { type: "bookmarks:changed" });
     }

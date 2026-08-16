@@ -108,6 +108,14 @@ function push(db, userId, { bookmarks = [], folders = [] }) {
       ? clientFolderIdToServerId[clientId]
       : clientId;
 
+  const ownedFolderId = (folderId) => {
+    if (folderId == null) return null;
+    const folder = db
+      .prepare("SELECT id FROM folders WHERE id = ? AND user_id = ?")
+      .get(folderId, userId);
+    return folder ? folderId : null;
+  };
+
   if (bookmarks && bookmarks.length) {
     for (const bm of bookmarks) {
       try {
@@ -120,10 +128,17 @@ function push(db, userId, { bookmarks = [], folders = [] }) {
             results.bookmarks_skipped++;
             continue;
           }
-          const resolvedFolderId = resolveFolderId(bm.folder_id);
+          const resolvedFolderId = ownedFolderId(resolveFolderId(bm.folder_id));
           db.prepare(
             "UPDATE bookmarks SET title = ?, folder_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?",
-          ).run(bm.title, resolvedFolderId, existing.id, userId);
+          ).run(
+            bm.title,
+            bm.folder_id == null || resolvedFolderId !== null
+              ? resolvedFolderId
+              : existing.folder_id,
+            existing.id,
+            userId,
+          );
           if (bm.tags) {
             const tagsString = Array.isArray(bm.tags)
               ? bm.tags.join(",")
@@ -137,13 +152,14 @@ function push(db, userId, { bookmarks = [], folders = [] }) {
               db,
               existing.id,
               tagIds,
+              { userId },
             );
           }
           results.updated++;
         } else {
           const id = uuidv4();
           const faviconUrl = null;
-          const resolvedFolderId = resolveFolderId(bm.folder_id);
+          const resolvedFolderId = ownedFolderId(resolveFolderId(bm.folder_id));
 
           db.prepare(
             "INSERT INTO bookmarks (id, user_id, folder_id, title, url, favicon) VALUES (?, ?, ?, ?, ?, ?)",
@@ -169,6 +185,7 @@ function push(db, userId, { bookmarks = [], folders = [] }) {
               db,
               id,
               tagIds,
+              { userId },
             );
           }
 

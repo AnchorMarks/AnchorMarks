@@ -16,6 +16,13 @@ module.exports = function createHealthRouter(db) {
     validateQuery(schemas.healthDeadlinksQuery),
     ctrl.checkDeadlinks,
   );
+  router.post(
+    "/deadlinks",
+    auth,
+    csrf,
+    validateQuery(schemas.healthDeadlinksQuery),
+    ctrl.checkDeadlinks,
+  );
   router.get(
     "/performance",
     auth,

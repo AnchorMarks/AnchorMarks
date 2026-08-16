@@ -81,10 +81,17 @@ describe("Health API", () => {
 
   it("runs deadlink analysis (init)", async () => {
     const res = await agent
-      .get("/api/health/deadlinks?check=true")
+      .post("/api/health/deadlinks?check=true")
       .set("X-CSRF-Token", csrfToken);
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty("checked");
+  });
+
+  it("rejects state-changing deadlink checks over GET", async () => {
+    const res = await agent
+      .get("/api/health/deadlinks?check=true")
+      .set("X-CSRF-Token", csrfToken);
+    expect(res.status).toBe(405);
   });
 
   it("fetches deadlink stats", async () => {

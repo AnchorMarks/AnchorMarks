@@ -9,9 +9,6 @@ services:
         PORT: ${PORT:-3000}
         HOST: ${HOST:-0.0.0.0}
         DB_PATH: ${DB_PATH:-/apps/database/anchormarks.db}
-        # No defaults for secrets; set JWT_SECRET, JWT_REFRESH_SECRET, and CORS_ORIGIN in .env or host env
-        JWT_SECRET: ${JWT_SECRET}
-        JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
         CORS_ORIGIN: ${CORS_ORIGIN}
         SSL_ENABLED: ${SSL_ENABLED}
         SSL_KEY: ${SSL_KEY}
@@ -28,9 +25,10 @@ services:
     container_name: anchormarks
     restart: unless-stopped
     ports:
-      - "${PORT:-3000}:${PORT:-3000}"
+      - "127.0.0.1:${PORT:-3000}:${PORT:-3000}"
+    networks:
+      - npm-network
     volumes:
-      - ../../apps/server:/apps/server
       - ../../apps/database:/apps/database
       - ../../apps/ssl:/apps/ssl
       - ../../.env:/apps/.env
@@ -63,3 +61,8 @@ services:
       DB_PATH: ":memory:"
     profiles:
       - test
+
+networks:
+  npm-network:
+    external: true
+    name: nginxproxymanager_npm-network
