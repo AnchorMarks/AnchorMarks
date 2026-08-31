@@ -9,6 +9,7 @@ All notable changes to AnchorMarks are documented here.
 ### Fixed
 
 - **Plain-HTTP deployments no longer forced to HTTPS** — the CSP header no longer includes `upgrade-insecure-requests` when `SSL_ENABLED` is false, so browsers stop rewriting every `http://` subresource request to `https://` (breaking API calls and assets on non-TLS installs)
+- **Add-bookmark page now saves top-level bookmarks** — bookmark create/update validation and the update model now accept `folder_id: null`, so the `/addbookmark` flow can save bookmarks with no folder selected instead of returning "Expected string, received null"
 
 ---
 

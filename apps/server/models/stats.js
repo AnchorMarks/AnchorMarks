@@ -1,9 +1,6 @@
 const https = require("https");
 const http = require("http");
-const {
-  isPrivateAddress,
-  resolveToPublicIp,
-} = require("../utils/ssrfUtils");
+const { isPrivateAddress, resolveToPublicIp } = require("../utils/ssrfUtils");
 
 function getStats(db, userId) {
   const bookmarkCount = db
@@ -262,19 +259,18 @@ async function runDeadlinkChecks(db, userId, limit = 50) {
           port: urlObj.port || undefined,
           path: `${urlObj.pathname}${urlObj.search}`,
           headers: { Host: urlObj.host },
-          ...(urlObj.protocol === "https:" ? { servername: urlObj.hostname } : {}),
+          ...(urlObj.protocol === "https:"
+            ? { servername: urlObj.hostname }
+            : {}),
         };
       } else {
         requestOptions = bookmark.url;
       }
 
       const isDead = await new Promise((resolve) => {
-        const req = protocol.request(
-          requestOptions,
-          (response) => {
-            resolve(response.statusCode >= 400);
-          },
-        );
+        const req = protocol.request(requestOptions, (response) => {
+          resolve(response.statusCode >= 400);
+        });
         req.on("error", () => resolve(true));
         req.on("timeout", () => {
           req.destroy();

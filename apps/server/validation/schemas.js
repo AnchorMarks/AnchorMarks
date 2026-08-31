@@ -19,6 +19,7 @@ const hexColor = optionalString.pipe(
     .optional(),
 );
 const uuidLike = z.string().uuid().optional();
+const uuidLikeNullable = z.string().uuid().nullable().optional();
 const MAX_URL_LENGTH = 2048;
 const MAX_STRING_LENGTH = 10000;
 
@@ -122,7 +123,7 @@ const bookmarkCreate = z
     url: bookmarkUrl,
     title: optionalString,
     description: optionalString,
-    folder_id: uuidLike,
+    folder_id: uuidLikeNullable,
     tags: optionalString,
     color: optionalString,
     og_image: optionalHttpUrl,
@@ -141,7 +142,7 @@ const bookmarkUpdate = z
     title: optionalString,
     url: optionalString,
     description: optionalString,
-    folder_id: uuidLike,
+    folder_id: uuidLikeNullable,
     tags: optionalString,
     color: optionalString,
     og_image: optionalHttpUrl,

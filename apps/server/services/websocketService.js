@@ -151,20 +151,20 @@ function initWebSocket(server, db) {
 
   // Heartbeat: ping every 30s, terminate unresponsive connections
   heartbeatTimer = setInterval(() => {
-      if (!wss) return;
-      wss.clients.forEach((ws) => {
-        try {
-          jwt.verify(ws._wsToken, config.JWT_SECRET);
-          if (db) {
-            const user = db
-              .prepare("SELECT enabled FROM users WHERE id = ?")
-              .get(ws._wsUserId);
-            if (!user || user.enabled !== 1) return ws.terminate();
-          }
-        } catch {
-          return ws.terminate();
+    if (!wss) return;
+    wss.clients.forEach((ws) => {
+      try {
+        jwt.verify(ws._wsToken, config.JWT_SECRET);
+        if (db) {
+          const user = db
+            .prepare("SELECT enabled FROM users WHERE id = ?")
+            .get(ws._wsUserId);
+          if (!user || user.enabled !== 1) return ws.terminate();
         }
-        if (ws.isAlive === false) {
+      } catch {
+        return ws.terminate();
+      }
+      if (ws.isAlive === false) {
         return ws.terminate();
       }
       ws.isAlive = false;

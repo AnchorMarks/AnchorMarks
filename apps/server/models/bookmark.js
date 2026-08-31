@@ -470,36 +470,59 @@ function updateBookmark(db, userId, id, fields = {}) {
     og_image,
   } = fields;
   assertFolderOwnership(db, userId, folder_id);
-  db.prepare(
-    `
-    UPDATE bookmarks SET 
-      title = COALESCE(?, title),
-      url = COALESCE(?, url),
-      description = COALESCE(?, description),
-      folder_id = COALESCE(?, folder_id),
-      is_favorite = COALESCE(?, is_favorite),
-      position = COALESCE(?, position),
-      favicon = COALESCE(?, favicon),
-      color = COALESCE(?, color),
-      is_archived = COALESCE(?, is_archived),
-      og_image = COALESCE(?, og_image),
-      updated_at = CURRENT_TIMESTAMP
-    WHERE id = ? AND user_id = ?
-  `,
-  ).run(
-    title,
-    url,
-    description,
-    folder_id,
-    is_favorite,
-    position,
-    favicon,
-    color !== undefined ? color : null,
-    is_archived !== undefined ? is_archived : null,
-    og_image !== undefined ? og_image : null,
-    id,
-    userId,
-  );
+
+  // Build dynamic SET clause so explicit nulls (e.g. folder_id: null)
+  // actually clear the column instead of being ignored by COALESCE.
+  const setFields = [];
+  const values = [];
+  if (title !== undefined) {
+    setFields.push("title = ?");
+    values.push(title);
+  }
+  if (url !== undefined) {
+    setFields.push("url = ?");
+    values.push(url);
+  }
+  if (description !== undefined) {
+    setFields.push("description = ?");
+    values.push(description);
+  }
+  if (folder_id !== undefined) {
+    setFields.push("folder_id = ?");
+    values.push(folder_id);
+  }
+  if (is_favorite !== undefined) {
+    setFields.push("is_favorite = ?");
+    values.push(is_favorite);
+  }
+  if (position !== undefined) {
+    setFields.push("position = ?");
+    values.push(position);
+  }
+  if (favicon !== undefined) {
+    setFields.push("favicon = ?");
+    values.push(favicon);
+  }
+  if (color !== undefined) {
+    setFields.push("color = ?");
+    values.push(color);
+  }
+  if (is_archived !== undefined) {
+    setFields.push("is_archived = ?");
+    values.push(is_archived);
+  }
+  if (og_image !== undefined) {
+    setFields.push("og_image = ?");
+    values.push(og_image);
+  }
+
+  const sql =
+    setFields.length > 0
+      ? `UPDATE bookmarks SET ${setFields.join(", ")}, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?`
+      : `UPDATE bookmarks SET updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?`;
+  const runValues =
+    setFields.length > 0 ? [...values, id, userId] : [id, userId];
+  db.prepare(sql).run(...runValues);
 
   if (tags !== undefined) {
     const tagHelpers = require("../services/tagService");

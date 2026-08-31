@@ -48,6 +48,46 @@ describe("Bookmarks Controller", () => {
     bookmarkId = res.body.id;
   });
 
+  it("creates a bookmark with folder_id: null", async () => {
+    const res = await agent
+      .post("/api/bookmarks")
+      .set("X-CSRF-Token", csrfToken)
+      .send({
+        url: "https://example.com/top-level",
+        title: "Top Level",
+        folder_id: null,
+      });
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBeTruthy();
+    expect(res.body.folder_id).toBeNull();
+  });
+
+  it("updates a bookmark to remove folder assignment", async () => {
+    const folder = await agent
+      .post("/api/folders")
+      .set("X-CSRF-Token", csrfToken)
+      .send({ name: "Temp Folder", color: "#6366f1" });
+    expect(folder.status).toBe(200);
+
+    const create = await agent
+      .post("/api/bookmarks")
+      .set("X-CSRF-Token", csrfToken)
+      .send({
+        url: "https://example.com/in-folder",
+        title: "In Folder",
+        folder_id: folder.body.id,
+      });
+    expect(create.status).toBe(200);
+    expect(create.body.folder_id).toBe(folder.body.id);
+
+    const update = await agent
+      .put(`/api/bookmarks/${create.body.id}`)
+      .set("X-CSRF-Token", csrfToken)
+      .send({ folder_id: null });
+    expect(update.status).toBe(200);
+    expect(update.body.folder_id).toBeNull();
+  });
+
   it("lists bookmarks and includes created one", async () => {
     const res = await agent
       .get("/api/bookmarks")
@@ -69,12 +109,10 @@ describe("Bookmarks Controller", () => {
 
   it("does not allow another user to modify bookmark tags", async () => {
     const otherAgent = request.agent(app);
-    const register = await otherAgent
-      .post("/api/auth/register")
-      .send({
-        email: `other-bmtest${Date.now()}@example.com`,
-        password: "password123",
-      });
+    const register = await otherAgent.post("/api/auth/register").send({
+      email: `other-bmtest${Date.now()}@example.com`,
+      password: "password123",
+    });
     expect(register.status).toBe(200);
 
     const res = await otherAgent
@@ -91,12 +129,10 @@ describe("Bookmarks Controller", () => {
 
   it("does not allow assigning another user's folder", async () => {
     const otherAgent = request.agent(app);
-    const register = await otherAgent
-      .post("/api/auth/register")
-      .send({
-        email: `other-folder-test${Date.now()}@example.com`,
-        password: "password123",
-      });
+    const register = await otherAgent.post("/api/auth/register").send({
+      email: `other-folder-test${Date.now()}@example.com`,
+      password: "password123",
+    });
     expect(register.status).toBe(200);
 
     const folder = await otherAgent
@@ -108,7 +144,10 @@ describe("Bookmarks Controller", () => {
     const create = await agent
       .post("/api/bookmarks")
       .set("X-CSRF-Token", csrfToken)
-      .send({ url: "https://example.org/foreign-folder", folder_id: folder.body.id });
+      .send({
+        url: "https://example.org/foreign-folder",
+        folder_id: folder.body.id,
+      });
     expect(create.status).toBe(400);
 
     const update = await agent
