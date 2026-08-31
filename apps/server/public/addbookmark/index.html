@@ -379,7 +379,12 @@
           try {
             const res = await fetch("/api/folders", { credentials: "include" });
             if (!res.ok) throw new Error("Failed to load folders");
-            const folders = await res.json();
+            // GET /api/folders responds with { folders: [...] }; tolerate a bare
+            // array too so the dropdown still fills if that contract ever changes.
+            const payload = await res.json();
+            const folders = Array.isArray(payload)
+              ? payload
+              : (payload && payload.folders) || [];
 
             // Build nested, alphabetically sorted options (use namespaced shared helper when available)
             const sharedBuilder =
@@ -388,6 +393,7 @@
               window.buildFolderOptionsHTML ||
               null;
 
+            let htmlFromSharedBuilder = null;
             if (typeof sharedBuilder === "function") {
               try {
                 const html = sharedBuilder(
@@ -398,21 +404,23 @@
                   typeof html === "string" &&
                   html.indexOf("<option") !== -1
                 ) {
-                  folderSelect.innerHTML = html;
+                  htmlFromSharedBuilder = html;
                 } else {
                   console.warn(
                     "Shared builder returned unexpected value, falling back to local builder:",
                     html,
                   );
-                  folderSelect.innerHTML = "";
                 }
               } catch (err) {
                 console.error(
                   "Shared builder threw an error, falling back to local builder:",
                   err,
                 );
-                folderSelect.innerHTML = "";
               }
+            }
+
+            if (htmlFromSharedBuilder !== null) {
+              folderSelect.innerHTML = htmlFromSharedBuilder;
             } else {
               folderSelect.innerHTML = "";
               const topOpt = document.createElement("option");

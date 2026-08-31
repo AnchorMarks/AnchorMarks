@@ -1,0 +1,9 @@
+# Generated build artifacts — do not reformat.
+# Built by `make build-frontend` (esbuild --minify).
+apps/server/public/js/folders-utils.js
+
+# Build output / coverage
+apps/client/dist
+coverage
+playwright-report
+test-results
